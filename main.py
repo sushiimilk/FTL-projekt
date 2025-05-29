@@ -25,17 +25,19 @@ font = pygame.font.SysFont("arial", 40)
 button_rect = pygame.Rect(920, 50, 230, 60)
 
 def draw_entry_screen():
-    screen.blit(background, (0, 0))
-    screen.blit(kestrel_surface, (300, 150))  # Adjust position as needed
+    scaled_background = pygame.transform.scale(background, screen.get_size())
+    screen.blit(scaled_background, (0, 0))
+
+    screen.blit(kestrel_surface, (200, 0))  # Adjust position as needed
 
     pygame.draw.rect(screen, (0, 0, 0), button_rect)
-    pygame.draw.rect(screen, (255, 255, 255), button_rect, 2)
-    text = font.render("NEW GAME", True, (255, 255, 255))
-    screen.blit(text, (button_rect.x + 25, button_rect.y + 10))
+    pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
+    text = font.render("START", True, (255, 255, 255))
+    screen.blit(text, (button_rect.x + 10, button_rect.y + 8))
 
     pygame.display.flip()
 
-# Main loop
+#Main loop
 def main_menu():
     while True:
         for event in pygame.event.get():
