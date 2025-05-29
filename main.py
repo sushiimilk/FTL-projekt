@@ -10,6 +10,9 @@ background = pygame.image.load('assets/Hangar Background.png')
 background = pygame.transform.scale(background, screen.get_size())
 
 kestrel_surface = pygame.image.load('assets/Kestrel/Kestrel Cruiser closed.png').convert_alpha()
+cursor_img = pygame.image.load('assets/cursor.png').convert_alpha()
+cursor_img = pygame.transform.scale(cursor_img, (20,28))
+# pygame.mouse.set_visible(False)  # Hide system cursor
 
 # --- FONT ---
 font = pygame.font.SysFont("arial", 40)
@@ -22,11 +25,25 @@ def draw_entry_screen():
     screen.blit(background, (0, 0))
     screen.blit(kestrel_surface, (200, -18))  # Adjust ship position as needed
 
-    # Draw START button
-    pygame.draw.rect(screen, (0, 0, 0), button_rect)
-    pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
-    text = font.render("START", True, (255, 255, 255))
+    # Detect hover
+    mouse_pos = pygame.mouse.get_pos()
+    is_hovered = button_rect.collidepoint(mouse_pos)
+
+    # Button colors
+    button_color = (30, 30, 30) if is_hovered else (0, 0, 0)
+    border_color = (255, 255, 255)
+    text_color = (255, 255, 255)
+
+    # Draw button
+    pygame.draw.rect(screen, button_color, button_rect)
+    pygame.draw.rect(screen, border_color, button_rect, 2)
+
+    text = font.render("START", True, text_color)
     screen.blit(text, (button_rect.x + 10, button_rect.y + 8))
+
+    # Draw custom cursor
+    cursor_offset = (0, 0)  # Change to (x, y) if you want to shift the image
+    screen.blit(cursor_img, (mouse_pos[0] - cursor_offset[0], mouse_pos[1] - cursor_offset[1]))
 
     pygame.display.flip()
 
@@ -48,6 +65,7 @@ def main_menu():
 # --- MAIN ---
 if __name__ == "__main__":
     main_menu()
+
 
 
 # path = os.path.join(os.getcwd(), 'images')
