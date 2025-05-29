@@ -7,8 +7,8 @@ screen = pygame.display.set_mode((1200, 700))
 clock = pygame.time.Clock()
 
 #wczytanie grafik
-kestrel_sprite_sheet = pygame.image.load('assets/Kestrel Cruiser.png').convert_alpha()
-#710x489
+kestrel_sprite_sheet = pygame.image.load('assets/Kestrel/Kestrel Cruiser.png').convert_alpha()
+#~710x489
 x, y = 0, 50
 width, height = 710, 435
 kestrel_surface = pygame.Surface((width, height), pygame.SRCALPHA)
@@ -28,7 +28,7 @@ def draw_entry_screen():
     scaled_background = pygame.transform.scale(background, screen.get_size())
     screen.blit(scaled_background, (0, 0))
 
-    screen.blit(kestrel_surface, (200, 0))  # Adjust position as needed
+    screen.blit(kestrel_surface, (200, -19))  # Adjust position as needed
 
     pygame.draw.rect(screen, (0, 0, 0), button_rect)
     pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
