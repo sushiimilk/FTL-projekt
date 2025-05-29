@@ -2,34 +2,27 @@ import pygame, os, random
 from random import randint
 
 pygame.init()
-
 screen = pygame.display.set_mode((1200, 700))
 clock = pygame.time.Clock()
 
-#wczytanie grafik
-kestrel_sprite_sheet = pygame.image.load('assets/Kestrel/Kestrel Cruiser.png').convert_alpha()
-#~710x489
-x, y = 0, 50
-width, height = 710, 435
-kestrel_surface = pygame.Surface((width, height), pygame.SRCALPHA)
-kestrel_surface.blit(kestrel_sprite_sheet, (0, 0), pygame.Rect(x, y, width, height))
-# #ZAPISANIE DO PLIKU
-# pygame.image.save(kestrel_surface, "assets/kestrel.png")
-
+# --- WCZYTANIE GRAFIK ---
 background = pygame.image.load('assets/Hangar Background.png')
+background = pygame.transform.scale(background, screen.get_size())
 
-# Fonts
+kestrel_surface = pygame.image.load('assets/Kestrel/Kestrel Cruiser closed.png').convert_alpha()
+
+# --- FONT ---
 font = pygame.font.SysFont("arial", 40)
 
-# Button
-button_rect = pygame.Rect(920, 50, 230, 60)
+# --- BUTTON ---
+button_rect = pygame.Rect(1020, 50, 130, 60)
 
+# --- DRAW EKRAN STARTOWY ---
 def draw_entry_screen():
-    scaled_background = pygame.transform.scale(background, screen.get_size())
-    screen.blit(scaled_background, (0, 0))
+    screen.blit(background, (0, 0))
+    screen.blit(kestrel_surface, (200, -18))  # Adjust ship position as needed
 
-    screen.blit(kestrel_surface, (200, -19))  # Adjust position as needed
-
+    # Draw START button
     pygame.draw.rect(screen, (0, 0, 0), button_rect)
     pygame.draw.rect(screen, (255, 255, 255), button_rect, 1)
     text = font.render("START", True, (255, 255, 255))
@@ -37,21 +30,22 @@ def draw_entry_screen():
 
     pygame.display.flip()
 
-#Main loop
+# --- MAIN MENU LOOP ---
 def main_menu():
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
-                # sys.exit()
+                return
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if button_rect.collidepoint(event.pos):
-                    print("Starting game...")  # Replace with actual game launch
+                    print("Starting game...")  # Replace with actual game logic
                     return
 
         draw_entry_screen()
         clock.tick(60)
 
+# --- MAIN ---
 if __name__ == "__main__":
     main_menu()
 
