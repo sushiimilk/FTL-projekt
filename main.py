@@ -3,12 +3,22 @@ from random import randint
 
 pygame.init()
 
-SIZESCREEN = WIDTH, HEIGHT = 1200, 700
-
-screen = pygame.display.set_mode(SIZESCREEN)
+screen = pygame.display.set_mode((1200, 700))
 clock = pygame.time.Clock()
 
 #wczytanie grafik
+kestrel_sprite_sheet = pygame.image.load('assets/Kestrel Cruiser.png.png').convert_alpha()
+#710x489
+x, y = 0, 0
+width, height = 710, 488
+kestrel_surface = pygame.Surface((width, height), pygame.SRCALPHA)
+kestrel_surface.blit(kestrel_sprite_sheet, (0, 0), pygame.Rect(x, y, width, height))
+
+# # Save to file (optional)
+# pygame.image.save(kestrel_surface, "assets/kestrel.png")
+
+bg = pygame.image.load('assets/Hangar Background.png.jpg')
+ship = pygame.image.load('assets/Ship.png')
 path = os.path.join(os.getcwd(), 'images')
 file_names = os.listdir(path)
 BACKGROUND = pygame.image.load(os.path.join(path, 'background.png')).convert()
