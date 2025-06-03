@@ -1,0 +1,9 @@
+Wojciech Pruchnicki
+- Wyszukanie i sformatowanie grafik
+- Menu screen
+- Intro screen z efektem tekstu
+- Game screen (walka, hud, tło)
+- HP i tarcze statku
+- Losowi przeciwnicy + boss na 3 etapie
+- Przyciski attack, jump
+- Customowy cursor
