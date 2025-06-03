@@ -21,14 +21,18 @@ class Game:
                 if event.type == pygame.QUIT:
                     self.running = False
                 else:
-                    if self.state == "menu":
-                        self.menu_screen.handle_event(event, self)
-                    elif self.state == "intro":
-                        self.intro_screen.handle_event(event, self)
-                    elif self.state == "game":
-                        self.game_screen.handle_event(event, self)
-                    elif self.state == "death":
-                        self.game_over_screen.handle_event(event, self)
+                    match self.state:
+                        case "menu":
+                            self.menu_screen.handle_event(event, self)
+                        case "game":
+                            self.game_screen.handle_event(event, self)
+                        case "intro":
+                            self.intro_screen.handle_event(event, self)
+                        case "death":
+                            self.game_over_screen.handle_event(event, self)
+                        # case "victory":
+                        #     self.win_screen.handle_event(event, self)
+
 
             if self.state == "menu":
                 self.menu_screen.draw()

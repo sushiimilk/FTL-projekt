@@ -198,16 +198,27 @@ class GameOver:
     def __init__(self, screen):
         self.screen = screen
         self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 50)
+        self.smaller_font = pygame.font.Font("assets/C&C Red Alert.ttf", 20)
         self.cursor = Cursor()
-        self.quit_button = Button((screen.get_width()//2 - 50), 500, 110, 50, "QUIT", self.font)
+
+        self.quit_button = Button((screen.get_width()//2 - 55), 510, 110, 50, "QUIT", self.font)
+        self.menu_button = Button((screen.get_width()//2 - 117), 450, 234, 50, "MAIN MENU", self.font)
 
     def draw(self):
         self.screen.fill((0, 0, 0))
         text = self.font.render("MISSION FAILED", True, (255, 0, 0))
-        self.screen.blit(text, ((self.screen.get_width()//2 - text.get_width() // 2),250))
+        small_text = self.smaller_font.render("we'll get 'em next time...", True, (255, 0, 0))
+        self.screen.blit(text, ((self.screen.get_width()//2 - text.get_width() // 2),220))
+        self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
         self.quit_button.draw(self.screen)
+        self.menu_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
     def handle_event(self, event, game):
-        if event.type == pygame.MOUSEBUTTONDOWN and self.quit_button.is_hovered():
-            pygame.quit()
+        if event.type == pygame.MOUSEBUTTONDOWN:
+                if self.quit_button.is_hovered():
+                    pygame.quit()
+                if self.menu_button.is_hovered():
+                    game.game_screen = GameScreen(game.screen)
+                    game.intro_screen = IntroScreen(game.screen)
+                    game.state = "menu"

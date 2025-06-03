@@ -4,6 +4,7 @@ Wojciech Pruchnicki
 - Menu screen
 - Intro screen z efektem tekstu
 - Game screen (walka, hud, tło)
+- Death screen + guziki
 - HP i tarcze statku
 - Losowi przeciwnicy + boss na 3 etapie
 - Przyciski attack, jump
