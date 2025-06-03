@@ -31,12 +31,10 @@ class Game:
                 self.menu_screen.draw()
 
             elif self.state == "intro":
-                self.intro_screen.draw()
+                self.intro_screen.draw(self)
 
             elif self.state == "game":
                 self.game_screen.draw()
-
-
 
             pygame.display.flip()
             self.clock.tick(60)

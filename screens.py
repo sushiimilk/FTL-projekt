@@ -56,9 +56,10 @@ class IntroScreen:
         chars_to_show = min(int(elapsed * self.text_speed), len(self.full_text))
         return self.full_text[:chars_to_show]
 
-    def draw(self):
-        self.screen.blit(self.background, (0, 0))
-        self.ship.draw(self.screen)
+    def draw(self, game):
+        if game.state == "intro":
+            self.screen.blit(self.background, (0, 0))
+            self.ship.draw(self.screen)
 
         #box behind the intro text
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
@@ -121,7 +122,7 @@ class GameScreen:
     def draw(self):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen)
-        self.cursor.draw(self.screen)
+
 
         self.health_bar.update(self.health)
         self.shield_bar.update(self.shields)
@@ -137,6 +138,7 @@ class GameScreen:
         self.enemy_shield_bar.draw(self.screen)
 
         self.attack_button.draw(self.screen)
+        self.cursor.draw(self.screen)
 
 
     def spawn_enemy(self):
