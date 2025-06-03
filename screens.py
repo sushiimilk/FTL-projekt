@@ -109,7 +109,6 @@ class GameScreen:
             if self.health <= 0:
                 print("PRZEGRANA")
                 game.state = "loss"
-                pygame.quit()
 
         if self.enemy.health <= 0:
             self.stage += 1
@@ -118,7 +117,6 @@ class GameScreen:
             else:
                 print("WYGRANA") #zamienic na ekran koncowy
                 game.state = "victory"
-                pygame.quit()
 
         # if event.type == pygame.MOUSEBUTTONDOWN:
         #     if self.shields > 0:
