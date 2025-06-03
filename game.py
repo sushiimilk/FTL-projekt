@@ -28,7 +28,7 @@ class Game:
                     elif self.state == "game":
                         self.game_screen.handle_event(event, self)
                     elif self.state == "death":
-                        self.game_screen.handle_event(event, self)
+                        self.game_over_screen.handle_event(event, self)
 
             if self.state == "menu":
                 self.menu_screen.draw()
@@ -40,7 +40,7 @@ class Game:
                 self.game_screen.draw()
 
             elif self.state == "death":
-                self.game_screen.draw()
+                self.game_over_screen.draw()
 
             pygame.display.flip()
             self.clock.tick(60)

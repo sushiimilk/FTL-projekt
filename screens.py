@@ -184,7 +184,6 @@ class GameScreen:
             else:
                 self.health -= 15
             if self.health <= 0:
-                print("PRZEGRANA")
                 game.state = "death"
 
         if self.enemy.health <= 0:
@@ -200,12 +199,12 @@ class GameOver:
         self.screen = screen
         self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 50)
         self.cursor = Cursor()
-        self.quit_button = Button(500, 500, 200, 50, "QUIT", self.font)
+        self.quit_button = Button((screen.get_width()//2 - 50), 500, 110, 50, "QUIT", self.font)
 
     def draw(self):
         self.screen.fill((0, 0, 0))
         text = self.font.render("MISSION FAILED", True, (255, 0, 0))
-        self.screen.draw(text, (420,250)) ###################################
+        self.screen.blit(text, ((self.screen.get_width()//2 - text.get_width() // 2),250))
         self.quit_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
