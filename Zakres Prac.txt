@@ -7,3 +7,5 @@ Wojciech Pruchnicki
 - Losowi przeciwnicy + boss na 3 etapie
 - Przyciski attack, jump
 - Customowy cursor
+
+Szymon Rogowski
