@@ -1,5 +1,5 @@
 import pygame
-from screens import MenuScreen, GameScreen, IntroScreen
+from screens import MenuScreen, GameScreen, IntroScreen, GameOver
 
 class Game:
     def __init__(self):
@@ -13,6 +13,7 @@ class Game:
         self.menu_screen = MenuScreen(self.screen)
         self.game_screen = GameScreen(self.screen)
         self.intro_screen = IntroScreen(self.screen)
+        self.game_over_screen = GameOver(self.screen)
 
     def run(self):
         while self.running:
@@ -26,6 +27,8 @@ class Game:
                         self.intro_screen.handle_event(event, self)
                     elif self.state == "game":
                         self.game_screen.handle_event(event, self)
+                    elif self.state == "death":
+                        self.game_screen.handle_event(event, self)
 
             if self.state == "menu":
                 self.menu_screen.draw()
@@ -34,6 +37,9 @@ class Game:
                 self.intro_screen.draw(self)
 
             elif self.state == "game":
+                self.game_screen.draw()
+
+            elif self.state == "death":
                 self.game_screen.draw()
 
             pygame.display.flip()

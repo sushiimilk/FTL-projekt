@@ -46,20 +46,26 @@ class IntroScreen:
             "You see the first enemy ship approaching..."
         )
 
-        self.typing_start_time = time.time()
+        self.typing_start_time = None
         self.text_speed = 30  # characters per second
 
         self.jump_button = Button(520, 600, 120, 40, "JUMP", self.font)
 
     def get_typed_text(self):
+        if self.typing_start_time is None:
+            return ""
         elapsed = time.time() - self.typing_start_time
         chars_to_show = min(int(elapsed * self.text_speed), len(self.full_text))
         return self.full_text[:chars_to_show]
 
+    def start(self):
+        if self.typing_start_time is None:
+            self.typing_start_time = time.time()
+
     def draw(self, game):
-        if game.state == "intro":
-            self.screen.blit(self.background, (0, 0))
-            self.ship.draw(self.screen)
+
+        self.screen.blit(self.background, (0, 0))
+        self.ship.draw(self.screen)
 
         #box behind the intro text
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
@@ -82,6 +88,9 @@ class IntroScreen:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 pygame.quit()
+
+        game.intro_screen.start()
+        game.state = "intro"
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered():
             game.state = "game"
@@ -176,7 +185,7 @@ class GameScreen:
                 self.health -= 15
             if self.health <= 0:
                 print("PRZEGRANA")
-                game.state = "loss"
+                game.state = "death"
 
         if self.enemy.health <= 0:
             self.stage += 1
@@ -185,3 +194,21 @@ class GameScreen:
             else:
                 print("WYGRANA") #zamienic na ekran koncowy
                 game.state = "victory"
+
+class GameOver:
+    def __init__(self, screen):
+        self.screen = screen
+        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 50)
+        self.cursor = Cursor()
+        self.quit_button = Button(500, 500, 200, 50, "QUIT", self.font)
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        text = self.font.render("MISSION FAILED", True, (255, 0, 0))
+        self.screen.draw(text, (420,250)) ###################################
+        self.quit_button.draw(self.screen)
+        self.cursor.draw(self.screen)
+
+    def handle_event(self, event, game):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.quit_button.is_hovered():
+            pygame.quit()
