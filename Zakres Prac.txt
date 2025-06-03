@@ -1,11 +1,34 @@
 Wojciech Pruchnicki
 - Wyszukanie i sformatowanie grafik
+- Customowy cursor
 - Menu screen
 - Intro screen z efektem tekstu
 - Game screen (walka, hud, tło)
 - HP i tarcze statku
 - Losowi przeciwnicy + boss na 3 etapie
 - Przyciski attack, jump
-- Customowy cursor
+
 
 Szymon Rogowski
+
+
+
+
+
+Do zrobienia
+- zmiana tla co przeciwnik
+- niepowtarzanie się przeciwnika
+- Pokazywana tarcza w okól statku gdy shield > 0
+- odnawianie się shielda z czasem, np jak zbite to zera to 5 sekund potem zaczyna się odnawiać
+- bronie na statkach i animacja strzałów
+- atak gracza i przeciwnika oparty o cooldown a nie turn based
+- guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
+- upgrade za kazdy pokonany przeciwnik, np szybsze strzelanie wiecej hp/shield
+
+
+może
+- animowane ludziki w środku statku
+- damage to poszczególnych modułów statku
+- rozne typy broni (laser, rakieta)
+
+
