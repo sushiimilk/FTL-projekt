@@ -23,7 +23,7 @@ class Game:
                     if self.state == "menu":
                         self.menu_screen.handle_event(event, self)
                     elif self.state == "intro":
-                        self.game_screen.handle_event(event, self)
+                        self.intro_screen.handle_event(event, self)
                     elif self.state == "game":
                         self.game_screen.handle_event(event, self)
 

@@ -1,8 +1,7 @@
-import pygame
+import pygame, random, time, math
 from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
-import random
 
 class MenuScreen:
     def __init__(self, screen):
@@ -21,8 +20,12 @@ class MenuScreen:
         self.cursor.draw(self.screen)
 
     def handle_event(self, event, game):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+
         if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_hovered():
-            game.state = "game"
+            game.state = "intro"
 
 
 
@@ -31,34 +34,54 @@ class IntroScreen:
         self.screen = screen
         self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
                                                  screen.get_size())
+        self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png",
+                         screen.get_width() // 2, screen.get_height() // 2)
         self.cursor = Cursor()
-        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 40)
+        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 28)
 
-        self.intro_text = [
-            "Your ships hyperdrive has failed.",
-            "You're stranded in hostile space..."
-            "Steal fuel and fight your way home!"
+        self.full_text = (
+            "Your ship's hyperdrive has failed.\n"
+            "You're stranded in hostile space...\n"
+            "Steal fuel and fight your way home!\n"
             "You see the first enemy ship approaching..."
-        ]
+        )
 
-        self.ship = Ship("assets/Kestrel/Kestrel Cruiser open.png", screen.get_width() // 2, screen.get_height() // 2)
-        self.jump_button = Button(520, 600, 160, 40, "JUMP", self.font)
+        self.typing_start_time = time.time()
+        self.text_speed = 30  # characters per second
+
+        self.jump_button = Button(520, 600, 120, 40, "JUMP", self.font)
+
+    def get_typed_text(self):
+        elapsed = time.time() - self.typing_start_time
+        chars_to_show = min(int(elapsed * self.text_speed), len(self.full_text))
+        return self.full_text[:chars_to_show]
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen)
-        self.ship.draw(self.screen)
-        self.cursor.draw(self.screen)
 
+        #box behind the intro text
+        box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
+        box_surface.fill((0, 0, 0, 160))
+        self.screen.blit(box_surface, (50, 80))
+
+        # intro text
+        current_text = self.get_typed_text()
+        lines = current_text.split("\n")
         y_offset = 100
-        for line in self.intro_text:
+        for line in lines:
             text_surf = self.font.render(line, True, (255, 255, 255))
             self.screen.blit(text_surf, (80, y_offset))
             y_offset += 40
+
         self.jump_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
     def handle_event(self, event, game):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+
         if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered():
             game.state = "game"
 
@@ -134,6 +157,10 @@ class GameScreen:
 
 
     def handle_event(self, event, game):
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                pygame.quit()
+
         if event.type == pygame.MOUSEBUTTONDOWN and self.attack_button.is_hovered():
             #Atakowanie przeciwnika
             self.enemy.take_damage(random.randint(18, 25))
@@ -156,11 +183,3 @@ class GameScreen:
             else:
                 print("WYGRANA") #zamienic na ekran koncowy
                 game.state = "victory"
-
-        # if event.type == pygame.MOUSEBUTTONDOWN:
-        #     if self.shields > 0:
-        #         self.shields -= 10
-        #     else:
-        #         self.health -= 10
-        #
-        # pass  # Add later for gameplay input
