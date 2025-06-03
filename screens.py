@@ -27,12 +27,40 @@ class MenuScreen:
 
 
 class IntroScreen:
-    def init(self, screen):
+    def __init__(self, screen):
         self.screen = screen
         self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
                                                  screen.get_size())
         self.cursor = Cursor()
+        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 40)
 
+        self.intro_text = [
+            "Your ships hyperdrive has failed.",
+            "You're stranded in hostile space..."
+            "Steal fuel and fight your way home!"
+            "You see the first enemy ship approaching..."
+        ]
+
+        self.ship = Ship("assets/Kestrel/Kestrel Cruiser open.png", screen.get_width() // 2, screen.get_height() // 2)
+        self.jump_button = Button(520, 600, 160, 40, "JUMP", self.font)
+
+    def draw(self):
+        self.screen.blit(self.background, (0, 0))
+        self.ship.draw(self.screen)
+        self.ship.draw(self.screen)
+        self.cursor.draw(self.screen)
+
+        y_offset = 100
+        for line in self.intro_text:
+            text_surf = self.font.render(line, True, (255, 255, 255))
+            self.screen.blit(text_surf, (80, y_offset))
+            y_offset += 40
+        self.jump_button.draw(self.screen)
+        self.cursor.draw(self.screen)
+
+    def handle_event(self, event, game):
+        if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered():
+            game.state = "game"
 
 
 class GameScreen:
