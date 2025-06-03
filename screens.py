@@ -7,7 +7,8 @@ import random
 class MenuScreen:
     def __init__(self, screen):
         self.screen = screen
-        self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"), screen.get_size())
+        self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"),
+                                                 screen.get_size())
         self.ship_image = pygame.image.load("assets/Kestrel/Kestrel Cruiser closed.png").convert_alpha()
         self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 40)
         self.button = Button(1020, 50, 130, 40, "START", self.font)
@@ -25,11 +26,21 @@ class MenuScreen:
 
 
 
+class IntroScreen:
+    def init(self, screen):
+        self.screen = screen
+        self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
+                                                 screen.get_size())
+        self.cursor = Cursor()
+
+
+
 class GameScreen:
     def __init__(self, screen):
         #backgrounds and stuff
         self.screen = screen
-        self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"), screen.get_size())
+        self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
+                                                 screen.get_size())
         self.cursor = Cursor()
 
         self.health = 100
