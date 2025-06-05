@@ -10,6 +10,7 @@ Wojciech Pruchnicki
 - Przyciski attack, jump
 
 
+
 Szymon Rogowski
 - Wyszukanie i sformatowanie grafik
 - rozstawienie Statku i przeciwników
@@ -20,18 +21,16 @@ Szymon Rogowski
 
 Do zrobienia
 
--shield i shields - 2 obiekty
-
-- animacje dzialajacych silnikow
+- ekran wygranej
+- guzik JUMP po pokonaniu przeciwnika
 - odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
-- bronie na statkach i animacja strzałów
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
+- dwa oddzielne guziki (laser i rakietnica)
+- animacje dzialajacych silnikow
+- animowane ludziki w środku statku
+- damage do poszczególnych modułów statku - jakis maly tekst uswiadamiajacy o tym pojawiajacy sie przy statku
+- bronie na statkach i animacja strzałów
 - upgrade za kazdy pokonany przeciwnik, np szybsze strzelanie wiecej hp/shield
 - licznik który aktualnie jest stage (np zeby pisalo stage: 1)
-
-może
-- animowane ludziki w środku statku
-- damage to poszczególnych modułów statku
-- rozne typy broni (laser, rakieta)
 
 

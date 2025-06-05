@@ -151,7 +151,6 @@ class GameScreen:
         self.attack_button = Button(520, 600, 160, 40, "ATTACK", pygame.font.Font(FONT_PATH, 24))
 
 
-
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
 
@@ -166,11 +165,12 @@ class GameScreen:
         self.shield_bar.draw(self.screen)
 
         #Enemy ships and stuff
-        self.enemy.draw(self.screen)
-        self.enemy_health_bar.update(self.enemy.health)
-        self.enemy_shield_bar.update(self.enemy.shield)
-        self.enemy_health_bar.draw(self.screen)
-        self.enemy_shield_bar.draw(self.screen)
+        if self.enemy.health > 0:
+            self.enemy.draw(self.screen)
+            self.enemy_health_bar.update(self.enemy.health)
+            self.enemy_shield_bar.update(self.enemy.shield)
+            self.enemy_health_bar.draw(self.screen)
+            self.enemy_shield_bar.draw(self.screen)
 
         #atak przeciwnika na cooldownie
         now = time.time()
