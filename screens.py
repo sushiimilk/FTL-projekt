@@ -86,16 +86,13 @@ class IntroScreen:
         self.cursor.draw(self.screen)
 
     def handle_event(self, event, game):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
                 game.running = False
                 pygame.quit()
-
-        game.intro_screen.start()
-        game.state = "intro"
-
-        if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered():
-            game.state = "game"
+        elif event.type == pygame.MOUSEBUTTONDOWN:
+            if self.jump_button.is_hovered():
+                game.state = "game"
+        self.start()
 
 
 class GameScreen:
@@ -211,11 +208,11 @@ class GameScreen:
 
         self.enemy_health_bar = Bar(900, 60, 200, 24,
                                     self.enemy.max_health, (200, 0, 0),
-                                    "ENEMY HULL", FONT_PATH)
+                                    "ENEMY HULL")
 
         self.enemy_shield_bar = Bar(900, 110, 200, 24,
                                     self.enemy.max_shield, (0, 150, 255),
-                                    "ENEMY SHIELDS", FONT_PATH)
+                                    "ENEMY SHIELDS")
 
 
     def handle_event(self, event, game):
