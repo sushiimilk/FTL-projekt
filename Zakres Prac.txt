@@ -8,6 +8,10 @@ Wojciech Pruchnicki
 - HP i tarcze statku
 - Losowi przeciwnicy + boss na 3 etapie
 - Przyciski attack, jump
+- losowe tła przy przeciwnikach
+- guzik JUMP po pokonaniu przeciwnika
+- przerwa miedzy przeciwnikami dopoki guzik jump nie klikniety
+
 
 
 
@@ -19,10 +23,12 @@ Szymon Rogowski
 - Pokazywana tarcza w okól statku gdy shield > 0
 - atak gracza i przeciwnika oparty o cooldown
 
-Do zrobienia
 
+Do zrobienia
+- zeskalowanie statkow zeby się miesciły na ekranie
+- odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
+- srodkowanie statku po zabiciu przeciwnika
 - ekran wygranej
-- guzik JUMP po pokonaniu przeciwnika
 - odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
 - dwa oddzielne guziki (laser i rakietnica)

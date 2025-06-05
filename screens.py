@@ -102,27 +102,23 @@ class GameScreen:
 
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
-            "assets/Backgrounds/bg_dullstars.png",
             "assets/Backgrounds/bg_blueStarcluster.png",
-            "assets/Backgrounds/bg_dullstars2.png",
             "assets/Backgrounds/bg_lonelyRedStar.png",
-            "assets/Backgrounds/bg_lonelystar.png"
-
+            "assets/Backgrounds/bg_lonelystar.png",
+            "assets/Background/low_pulsar.png",
+            "assets/Background/low_sun.png",
+            "assets/Background/low_nebula.png",
         ]
-        self.background_index = 0
-        self.background = pygame.transform.scale(
-            pygame.image.load(self.background_paths[self.background_index]),
-            screen.get_size()
-        )
-        self.cursor = Cursor()
+        self.boss_background = "assets/Backgrounds/bg_final.png"
+        self.last_background = None
 
-        
+        self.cursor = Cursor()
 
         self.health = 100
         self.shields = 50
 
         #player ship
-        self.ship = Ship("assets/Kestrel/Kestrel Cruiser open.png", screen.get_width()//2, screen.get_height()//2)
+        self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
         self.ship.move(-300, 100)
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
@@ -137,13 +133,17 @@ class GameScreen:
 
         self.stage = 1
 
+        #przerwy miedzy przeciwnikami
+        self.waiting_for_jump = False
+        self.jump_button = Button(520, 600, 120, 40, "JUMP", pygame.font.Font(FONT_PATH, 24))
+
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
             "assets/Mantis/Mantis Fighter.png",
             "assets/RFighter/Rebel Fighter.png"
         ]
         random.shuffle(self.enemy_ship_paths) 
-        self.enemy_index = 0
+
         
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
@@ -151,12 +151,61 @@ class GameScreen:
         self.attack_button = Button(520, 600, 160, 40, "ATTACK", pygame.font.Font(FONT_PATH, 24))
 
 
+    def enemy_attack(self, game):
+        now = time.time()
+        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            self.last_enemy_attack = now
+            if self.shields > 0:
+                blocked = min(15, self.shields)
+                self.shields -= blocked
+                self.health -= max(0, 15 - blocked)
+            else:
+                self.health -= 15
+            if self.health <= 0:
+                game.state = "death"
+
+
+    def spawn_enemy(self):
+        #zmiana tła
+        if self.stage < 3:
+            available_backgrounds = [bg for bg in self.background_paths if bg != self.last_background]
+            chosen_bg = random.choice(available_backgrounds)
+            self.last_background = chosen_bg
+        else:
+            chosen_bg = self.boss_background
+
+        self.background = pygame.transform.scale(
+            pygame.image.load(chosen_bg),
+            self.screen.get_size()
+        )
+
+        #Losowanie przeciwnika
+        if self.stage < 3:
+            enemy_image = random.choice(self.enemy_ship_paths)
+        else:
+            enemy_image = self.boss_ship_path
+
+        #Rysowanie przeciwnika
+        self.enemy = EnemyShip(enemy_image, x=900, y=200)
+        self.enemy.move(0, 200)
+
+        #Reset tarczy gracza
+        self.shields = self.shield_bar.max_value
+
+        #Tarcze i hp przeciwnika
+        self.enemy_health_bar = Bar(900, 60, 200, 24,
+                                    self.enemy.max_health, (200, 0, 0),
+                                    "ENEMY HULL")
+
+        self.enemy_shield_bar = Bar(900, 110, 200, 24,
+                                    self.enemy.max_shield, (0, 150, 255),
+                                    "ENEMY SHIELDS")
+
+
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
-
         self.ship.shield = self.shields
         self.ship.draw(self.screen)
-
 
         self.health_bar.update(self.health)
         self.shield_bar.update(self.shields)
@@ -165,54 +214,23 @@ class GameScreen:
         self.shield_bar.draw(self.screen)
 
         #Enemy ships and stuff
-        if self.enemy.health > 0:
+
+        if not self.waiting_for_jump and self.enemy.health > 0:
             self.enemy.draw(self.screen)
             self.enemy_health_bar.update(self.enemy.health)
             self.enemy_shield_bar.update(self.enemy.shield)
             self.enemy_health_bar.draw(self.screen)
             self.enemy_shield_bar.draw(self.screen)
 
-        #atak przeciwnika na cooldownie
-        now = time.time()
-        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
-            self.last_enemy_attack = now
-            if self.shields > 0:
-                damage = min(15, self.shields)
-                self.shields -= damage
-                leftover = 15 - damage
-                self.health -= leftover
-            else:
-                self.health -= 15
-            if self.health <= 0:
-                game.state = "death"
+        #auto atak przeciwnika
+        if not self.waiting_for_jump and self.enemy.health > 0:
+            self.enemy_attack(game)
 
-        self.attack_button.draw(self.screen)
-        self.cursor.draw(self.screen)
-
-
-    def spawn_enemy(self):
-        if self.stage < 3:
-            enemy_image = self.enemy_ship_paths[self.enemy_index]
-            self.enemy_index += 1
+        if self.waiting_for_jump:
+            self.jump_button.draw(self.screen)
         else:
-            enemy_image = self.boss_ship_path
-        # Zmień tło
-        self.background_index = (self.background_index + 1) % len(self.background_paths)
-        self.background = pygame.transform.scale(
-            pygame.image.load(self.background_paths[self.background_index]),
-            self.screen.get_size()
-        )
-
-        self.enemy = EnemyShip(enemy_image, x=900, y=200)
-        self.enemy.move(0, 200)
-
-        self.enemy_health_bar = Bar(900, 60, 200, 24,
-                                    self.enemy.max_health, (200, 0, 0),
-                                    "ENEMY HULL")
-
-        self.enemy_shield_bar = Bar(900, 110, 200, 24,
-                                    self.enemy.max_shield, (0, 150, 255),
-                                    "ENEMY SHIELDS")
+            self.attack_button.draw(self.screen)
+        self.cursor.draw(self.screen)
 
 
     def handle_event(self, event, game):
@@ -228,13 +246,17 @@ class GameScreen:
                 # Atakowanie przeciwnika
                 self.enemy.take_damage(random.randint(18, 25))
 
-        if self.enemy.health <= 0:
+        if self.enemy.health <= 0 and not self.waiting_for_jump:
+            self.waiting_for_jump = True
+            self.shields = 50
+
+        if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered() and self.waiting_for_jump:
             self.stage += 1
-            self.shields=50
             if self.stage <= 3:
                 self.spawn_enemy()
+                self.waiting_for_jump = False
             else:
-                print("WYGRANA") #zamienic na ekran koncowy
+                print("WYGRANA")
                 game.state = "victory"
 
 
