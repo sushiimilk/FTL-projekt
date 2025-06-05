@@ -11,21 +11,23 @@ Wojciech Pruchnicki
 
 
 Szymon Rogowski
-
-
-
-
+- Wyszukanie i sformatowanie grafik
+- rozstawienie Statku i przeciwników
+- niepowtarzanie się przeciwnika
+- zmiana tla co przeciwnik
+- Pokazywana tarcza w okól statku gdy shield > 0
+- atak gracza i przeciwnika oparty o cooldown
 
 Do zrobienia
-- zmiana tla co przeciwnik
-- niepowtarzanie się przeciwnika
-- Pokazywana tarcza w okól statku gdy shield > 0
-- odnawianie się shielda z czasem, np jak zbite to zera to 5 sekund potem zaczyna się odnawiać
+
+-shield i shields - 2 obiekty
+
+- animacje dzialajacych silnikow
+- odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
 - bronie na statkach i animacja strzałów
-- atak gracza i przeciwnika oparty o cooldown a nie turn based
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
 - upgrade za kazdy pokonany przeciwnik, np szybsze strzelanie wiecej hp/shield
-
+- licznik który aktualnie jest stage (np zeby pisalo stage: 1)
 
 może
 - animowane ludziki w środku statku

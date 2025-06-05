@@ -33,6 +33,8 @@ class Game:
                         # case "victory":
                         #     self.win_screen.handle_event(event, self)
 
+            if not self.running:
+                break
 
             if self.state == "menu":
                 self.menu_screen.draw()
@@ -41,7 +43,7 @@ class Game:
                 self.intro_screen.draw(self)
 
             elif self.state == "game":
-                self.game_screen.draw()
+                self.game_screen.draw(self)
 
             elif self.state == "death":
                 self.game_over_screen.draw()

@@ -22,6 +22,7 @@ class MenuScreen:
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                game.running = False
                 pygame.quit()
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_hovered():
@@ -87,6 +88,7 @@ class IntroScreen:
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                game.running = False
                 pygame.quit()
 
         game.intro_screen.start()
@@ -100,17 +102,39 @@ class GameScreen:
     def __init__(self, screen):
         #backgrounds and stuff
         self.screen = screen
-        self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
-                                                 screen.get_size())
+
+        self.background_paths = [
+            "assets/Backgrounds/bg_darknebula.png",
+            "assets/Backgrounds/bg_dullstars.png",
+            "assets/Backgrounds/bg_blueStarcluster.png",
+            "assets/Backgrounds/bg_dullstars2.png",
+            "assets/Backgrounds/bg_lonelyRedStar.png",
+            "assets/Backgrounds/bg_lonelystar.png"
+
+        ]
+        self.background_index = 0
+        self.background = pygame.transform.scale(
+            pygame.image.load(self.background_paths[self.background_index]),
+            screen.get_size()
+        )
         self.cursor = Cursor()
+
+        
 
         self.health = 100
         self.shields = 50
 
         #player ship
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser open.png", screen.get_width()//2, screen.get_height()//2)
+        self.ship.move(-300, 100)
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
+
+        #Atak gracza (cooldowny)
+        self.player_attack_cooldown = 1.5  #(sekundy)
+        self.enemy_attack_cooldown = 2.0   
+        self.last_player_attack = 0
+        self.last_enemy_attack = 0
 
         #Enemy ships and stage:
 
@@ -121,6 +145,9 @@ class GameScreen:
             "assets/Mantis/Mantis Fighter.png",
             "assets/RFighter/Rebel Fighter.png"
         ]
+        random.shuffle(self.enemy_ship_paths) 
+        self.enemy_index = 0
+        
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
 
@@ -130,6 +157,8 @@ class GameScreen:
 
     def draw(self):
         self.screen.blit(self.background, (0, 0))
+        
+        self.ship.shield = self.shields
         self.ship.draw(self.screen)
 
 
@@ -146,17 +175,42 @@ class GameScreen:
         self.enemy_health_bar.draw(self.screen)
         self.enemy_shield_bar.draw(self.screen)
 
+        #atak przeciwnika na cooldownie
+        now = time.time()
+        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            self.last_enemy_attack = now
+            if self.shields > 0:
+                damage = min(15, self.shields)
+                self.shields -= damage
+                leftover = 15 - damage
+                self.health -= leftover
+            else:
+                self.health -= 15
+            if self.health <= 0:
+                game = getattr(self, 'game', None)
+                if game:
+                    game.state = "death"
         self.attack_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
 
     def spawn_enemy(self):
         if self.stage < 3:
-            enemy_image = random.choice(self.enemy_ship_paths)
+            enemy_image = self.enemy_ship_paths[self.enemy_index]
+            self.enemy_index += 1
         else:
             enemy_image = self.boss_ship_path
+        # Zmień tło
+        self.background_index = (self.background_index + 1) % len(self.background_paths)
+        self.background = pygame.transform.scale(
+            pygame.image.load(self.background_paths[self.background_index]),
+            self.screen.get_size()
+        )
 
         self.enemy = EnemyShip(enemy_image, x=900, y=200)
+        self.enemy.move(0, 200)
+        self.enemy = EnemyShip(enemy_image, x=900, y=200)
+        self.enemy.move(0, 200)
 
         self.enemy_health_bar = Bar(900, 60, 200, 24,
                                     self.enemy.max_health, (200, 0, 0),
@@ -170,12 +224,43 @@ class GameScreen:
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
+                game.running = False
                 pygame.quit()
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.attack_button.is_hovered():
-            #Atakowanie przeciwnika
-            self.enemy.take_damage(random.randint(18, 25))
-            #Atak od przeciwnika
+            now = time.time()
+            if now - self.last_player_attack >= self.player_attack_cooldown:
+                self.last_player_attack = now
+                # Atakowanie przeciwnika
+                self.enemy.take_damage(random.randint(18, 25))
+
+        if self.enemy.health <= 0:
+            self.stage += 1
+            self.shields=50
+            if self.stage <= 3:
+                self.spawn_enemy()
+            else:
+                print("WYGRANA") #zamienic na ekran koncowy
+                game.state = "victory"
+
+    def draw(self, game=None):
+        self.screen.blit(self.background, (0, 0))
+        self.ship.shield = self.shields
+        self.ship.draw(self.screen)
+        self.health_bar.update(self.health)
+        self.shield_bar.update(self.shields)
+        self.health_bar.draw(self.screen)
+        self.shield_bar.draw(self.screen)
+        #Enemy ships and stuff
+        self.enemy.draw(self.screen)
+        self.enemy_health_bar.update(self.enemy.health)
+        self.enemy_shield_bar.update(self.enemy.shield)
+        self.enemy_health_bar.draw(self.screen)
+        self.enemy_shield_bar.draw(self.screen)
+        # Atak przeciwnika na cooldownie
+        now = time.time()
+        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            self.last_enemy_attack = now
             if self.shields > 0:
                 damage = min(15, self.shields)
                 self.shields -= damage
@@ -183,16 +268,10 @@ class GameScreen:
                 self.health -= leftover
             else:
                 self.health -= 15
-            if self.health <= 0:
+            if self.health <= 0 and game is not None:
                 game.state = "death"
-
-        if self.enemy.health <= 0:
-            self.stage += 1
-            if self.stage <= 3:
-                self.spawn_enemy()
-            else:
-                print("WYGRANA") #zamienic na ekran koncowy
-                game.state = "victory"
+        self.attack_button.draw(self.screen)
+        self.cursor.draw(self.screen)
 
 class GameOver:
     def __init__(self, screen):
@@ -217,7 +296,9 @@ class GameOver:
     def handle_event(self, event, game):
         if event.type == pygame.MOUSEBUTTONDOWN:
                 if self.quit_button.is_hovered():
+                    game.running = False
                     pygame.quit()
+                    return
                 if self.menu_button.is_hovered():
                     game.game_screen = GameScreen(game.screen)
                     game.intro_screen = IntroScreen(game.screen)
