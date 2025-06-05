@@ -20,6 +20,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
+                    break
                 else:
                     match self.state:
                         case "menu":
@@ -30,25 +31,20 @@ class Game:
                             self.intro_screen.handle_event(event, self)
                         case "death":
                             self.game_over_screen.handle_event(event, self)
-                        # case "victory":
-                        #     self.win_screen.handle_event(event, self)
 
-            if not self.running:
-                break
-
-            if self.state == "menu":
-                self.menu_screen.draw()
-
-            elif self.state == "intro":
-                self.intro_screen.draw(self)
-
-            elif self.state == "game":
-                self.game_screen.draw(self)
-
-            elif self.state == "death":
-                self.game_over_screen.draw()
+            # ✅ DRAWING SCREENS
+            match self.state:
+                case "menu":
+                    self.menu_screen.draw()
+                case "intro":
+                    self.intro_screen.draw(self)
+                case "game":
+                    self.game_screen.draw(self)
+                case "death":
+                    self.game_over_screen.draw()
 
             pygame.display.flip()
             self.clock.tick(60)
 
         pygame.quit()
+

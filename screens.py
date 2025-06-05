@@ -155,9 +155,9 @@ class GameScreen:
 
 
 
-    def draw(self):
+    def draw(self, game):
         self.screen.blit(self.background, (0, 0))
-        
+
         self.ship.shield = self.shields
         self.ship.draw(self.screen)
 
@@ -187,9 +187,8 @@ class GameScreen:
             else:
                 self.health -= 15
             if self.health <= 0:
-                game = getattr(self, 'game', None)
-                if game:
-                    game.state = "death"
+                game.state = "death"
+
         self.attack_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
@@ -207,8 +206,6 @@ class GameScreen:
             self.screen.get_size()
         )
 
-        self.enemy = EnemyShip(enemy_image, x=900, y=200)
-        self.enemy.move(0, 200)
         self.enemy = EnemyShip(enemy_image, x=900, y=200)
         self.enemy.move(0, 200)
 
@@ -243,35 +240,7 @@ class GameScreen:
                 print("WYGRANA") #zamienic na ekran koncowy
                 game.state = "victory"
 
-    def draw(self, game=None):
-        self.screen.blit(self.background, (0, 0))
-        self.ship.shield = self.shields
-        self.ship.draw(self.screen)
-        self.health_bar.update(self.health)
-        self.shield_bar.update(self.shields)
-        self.health_bar.draw(self.screen)
-        self.shield_bar.draw(self.screen)
-        #Enemy ships and stuff
-        self.enemy.draw(self.screen)
-        self.enemy_health_bar.update(self.enemy.health)
-        self.enemy_shield_bar.update(self.enemy.shield)
-        self.enemy_health_bar.draw(self.screen)
-        self.enemy_shield_bar.draw(self.screen)
-        # Atak przeciwnika na cooldownie
-        now = time.time()
-        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
-            self.last_enemy_attack = now
-            if self.shields > 0:
-                damage = min(15, self.shields)
-                self.shields -= damage
-                leftover = 15 - damage
-                self.health -= leftover
-            else:
-                self.health -= 15
-            if self.health <= 0 and game is not None:
-                game.state = "death"
-        self.attack_button.draw(self.screen)
-        self.cursor.draw(self.screen)
+
 
 class GameOver:
     def __init__(self, screen):
