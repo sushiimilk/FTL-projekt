@@ -1,5 +1,7 @@
 import pygame
 
+FONT_PATH = "assets/C&C Red Alert.ttf"
+
 class Button:
     def __init__(self, x, y, w, h, text, font):
         self.rect = pygame.Rect(x, y, w, h)

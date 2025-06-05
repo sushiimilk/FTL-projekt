@@ -1,7 +1,8 @@
 import pygame
+from ui import FONT_PATH
 
 class Bar:
-    def __init__(self, x, y, width, height, max_value, fill_color, label="", font_path="assets/C&C Red Alert.ttf"):
+    def __init__(self, x, y, width, height, max_value, fill_color, label=""):
         self.rect = pygame.Rect(x, y, width, height)
         self.max_value = max_value
         self.current_value = max_value
@@ -9,7 +10,7 @@ class Bar:
         self.border_color = (255, 255, 255)
         self.background_color = (20, 20, 20)
         self.label = label
-        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 16)
+        self.font = pygame.font.Font(FONT_PATH, 16)
 
     def update(self, value):
         self.current_value = max(0, min(self.max_value, value))

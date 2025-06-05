@@ -1,5 +1,5 @@
 import pygame, random, time, math
-from ui import Button, Cursor
+from ui import Button, Cursor, FONT_PATH
 from ship import Ship, EnemyShip
 from healthbar import Bar
 
@@ -9,7 +9,7 @@ class MenuScreen:
         self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"),
                                                  screen.get_size())
         self.ship_image = pygame.image.load("assets/Kestrel/Kestrel Cruiser closed.png").convert_alpha()
-        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 40)
+        self.font = pygame.font.Font(FONT_PATH, 40)
         self.button = Button(1020, 50, 130, 40, "START", self.font)
         self.cursor = Cursor()
 
@@ -38,7 +38,7 @@ class IntroScreen:
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png",
                          screen.get_width() // 2, screen.get_height() // 2)
         self.cursor = Cursor()
-        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 28)
+        self.font = pygame.font.Font(FONT_PATH, 28)
 
         self.full_text = (
             "Your ship's hyperdrive has failed.\n"
@@ -151,7 +151,7 @@ class GameScreen:
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
 
-        self.attack_button = Button(520, 600, 160, 40, "ATTACK", pygame.font.Font("assets/C&C Red Alert.ttf", 24))
+        self.attack_button = Button(520, 600, 160, 40, "ATTACK", pygame.font.Font(FONT_PATH, 24))
 
 
 
@@ -211,11 +211,11 @@ class GameScreen:
 
         self.enemy_health_bar = Bar(900, 60, 200, 24,
                                     self.enemy.max_health, (200, 0, 0),
-                                    "ENEMY HULL", "assets/C&C Red Alert.ttf")
+                                    "ENEMY HULL", FONT_PATH)
 
         self.enemy_shield_bar = Bar(900, 110, 200, 24,
                                     self.enemy.max_shield, (0, 150, 255),
-                                    "ENEMY SHIELDS", "assets/C&C Red Alert.ttf")
+                                    "ENEMY SHIELDS", FONT_PATH)
 
 
     def handle_event(self, event, game):
@@ -245,8 +245,8 @@ class GameScreen:
 class GameOver:
     def __init__(self, screen):
         self.screen = screen
-        self.font = pygame.font.Font("assets/C&C Red Alert.ttf", 50)
-        self.smaller_font = pygame.font.Font("assets/C&C Red Alert.ttf", 20)
+        self.font = pygame.font.Font(FONT_PATH, 50)
+        self.smaller_font = pygame.font.Font(FONT_PATH, 20)
         self.cursor = Cursor()
 
         self.quit_button = Button((screen.get_width()//2 - 55), 510, 110, 50, "QUIT", self.font)
