@@ -8,10 +8,9 @@ Wojciech Pruchnicki
 - HP i tarcze statku
 - Losowi przeciwnicy + boss na 3 etapie
 - Przyciski attack, jump
-- losowe tła przy przeciwnikach
 - guzik JUMP po pokonaniu przeciwnika
 - przerwa miedzy przeciwnikami dopoki guzik jump nie klikniety
-- skalowanie statku gracza
+- skalowanie statków
 
 
 
@@ -20,13 +19,14 @@ Szymon Rogowski
 - Wyszukanie i sformatowanie grafik
 - rozstawienie Statku i przeciwników
 - niepowtarzanie się przeciwnika
-- zmiana tla co przeciwnik
+- losowe tła przy przeciwnikach
 - Pokazywana tarcza w okól statku gdy shield > 0
 - atak gracza i przeciwnika oparty o cooldown
 
 
 Do zrobienia
 - zeskalowanie statkow przeciwnika zeby się miesciły na ekranie
+- zwiekszyc attak speed flagshipa (boss)
 - odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
 - srodkowanie statku po zabiciu przeciwnika
 - ekran wygranej

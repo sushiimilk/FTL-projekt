@@ -182,7 +182,8 @@ class GameScreen:
 
         #Losowanie przeciwnika
         if self.stage < 3:
-            enemy_image = random.choice(self.enemy_ship_paths)
+            if self.enemy_ship_paths:
+                enemy_image = self.enemy_ship_paths.pop()
         else:
             enemy_image = self.boss_ship_path
 

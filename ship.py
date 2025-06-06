@@ -61,8 +61,18 @@ class Ship:
             self.health -= amount
 
 class EnemyShip(Ship):
-    def __init__(self, image_path, x, y, max_health = 100, max_shield = 50):
-        super().__init__(image_path,x,y)
+    def __init__(self, image_path, x, y, max_health=100, max_shield=50):
+        original = pygame.image.load(image_path).convert_alpha()
+        ow, oh = original.get_size()
+        max_width, max_height = 400, 500
+
+        scale_x = max_width / ow
+        scale_y = max_height / oh
+        scale = min(scale_x, scale_y, 1.0)
+
+        super().__init__(image_path, x, y, max_health, max_shield, scale)
+        self.image = self.scaled_image
+
         self.health = max_health
         self.max_health = max_health
         self.shield = max_shield
