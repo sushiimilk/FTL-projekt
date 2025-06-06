@@ -11,6 +11,7 @@ Wojciech Pruchnicki
 - losowe tła przy przeciwnikach
 - guzik JUMP po pokonaniu przeciwnika
 - przerwa miedzy przeciwnikami dopoki guzik jump nie klikniety
+- skalowanie statku gracza
 
 
 
@@ -25,7 +26,7 @@ Szymon Rogowski
 
 
 Do zrobienia
-- zeskalowanie statkow zeby się miesciły na ekranie
+- zeskalowanie statkow przeciwnika zeby się miesciły na ekranie
 - odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
 - srodkowanie statku po zabiciu przeciwnika
 - ekran wygranej

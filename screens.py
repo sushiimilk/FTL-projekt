@@ -66,7 +66,8 @@ class IntroScreen:
     def draw(self, game):
 
         self.screen.blit(self.background, (0, 0))
-        self.ship.draw(self.screen)
+        self.ship.draw(self.screen, centered=True)
+
 
         #box behind the intro text
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
@@ -205,7 +206,7 @@ class GameScreen:
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
         self.ship.shield = self.shields
-        self.ship.draw(self.screen)
+        self.ship.draw(self.screen, centered =self.waiting_for_jump)
 
         self.health_bar.update(self.health)
         self.shield_bar.update(self.shields)
