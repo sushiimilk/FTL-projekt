@@ -11,6 +11,8 @@ Wojciech Pruchnicki
 - guzik JUMP po pokonaniu przeciwnika
 - przerwa miedzy przeciwnikami dopoki guzik jump nie klikniety
 - skalowanie statków
+- animacja znikajacego shielda
+- srodkowanie statku po zabiciu przeciwnika
 
 
 
@@ -25,21 +27,18 @@ Szymon Rogowski
 
 
 Do zrobienia
-
-- zeskalowanie statkow przeciwnika zeby się miesciły na ekranie
-- zwiekszyc attak speed flagshipa (boss)
-- odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
-- srodkowanie statku po zabiciu przeciwnika
-- ekran wygranej
+- licznik który aktualnie jest stage (np zeby pisalo stage: 1)
 - odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
+- zwiekszyc attak speed flagshipa albo inny modifier (boss)
+- dwa oddzielne guziki ataku (laser i rakietnica)
+- animacja strzelania (pociski sa w folderze official ftl images)
+- odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
+- bronie na statkach
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
-- dwa oddzielne guziki (laser i rakietnica)
+- damage do poszczególnych modułów statku - jakis maly tekst uswiadamiajacy o tym pojawiajacy sie przy statku
 - animacje dzialajacych silnikow
 - animowane ludziki w środku statku
-- damage do poszczególnych modułów statku - jakis maly tekst uswiadamiajacy o tym pojawiajacy sie przy statku
-- bronie na statkach i animacja strzałów
 - upgrade za kazdy pokonany przeciwnik, np szybsze strzelanie wiecej hp/shield
-- licznik który aktualnie jest stage (np zeby pisalo stage: 1)
+- ekran wygranej
 - coś dalej rysuje po zamknięciu gry na esc lub quit w death state
-
-
+- dziedziczenie super()

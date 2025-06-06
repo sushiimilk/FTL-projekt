@@ -1,4 +1,4 @@
-import pygame
+import pygame, time
 
 class Ship:
     def __init__(self, image_path, x, y, max_health=100, max_shield=50, scale=0.7):
@@ -14,6 +14,10 @@ class Ship:
 
         self.rect = self.scaled_image.get_rect(center=(x, y))
 
+        self.shield_fade_alpha = 255
+        self.shield_fade_start_time = None
+        self.shield_fade_duration = 0.5
+
         self.shield_image = pygame.image.load("assets/Kestrel/Kestrel Shield.png").convert_alpha()
         shield_w, shield_h = self.shield_image.get_size()
         self.shield_image_scaled = pygame.transform.smoothscale(
@@ -25,8 +29,22 @@ class Ship:
         self.shield = max_shield
         self.max_shield = max_shield
 
+    def move(self, dx, dy):
+        self.rect.x += dx
+        self.rect.y += dy
 
-    def draw(self, surface, centered = False):
+    def take_damage(self, amount):
+        if self.shield > 0:
+            blocked = min(self.shield, amount)
+            self.shield -= blocked
+            amount -= blocked
+            if self.shield <=0:
+                self.shield_fade_start_time = time.time()
+
+        if amount > 0:
+            self.health -= amount
+
+    def draw(self, surface, centered = False, show_shield=True):
         #rysowanie albo pełnego albo skalowanego statku
         if centered:
             image = self.full_image
@@ -36,29 +54,25 @@ class Ship:
             rect = self.rect
 
         #Rysowanie tarczy
-        if self.shield > 0:
-            if centered:
-                shield_img = self.shield_image
-                shield_rect = shield_img.get_rect(center=(surface.get_width() // 2, surface.get_height() // 2))
-            else:
-                shield_img = self.shield_image_scaled
-                shield_rect = shield_img.get_rect(center=self.rect.center)
+        if show_shield:
+            if self.shield > 0:
+                shield_img = self.shield_image if centered else self.shield_image_scaled
+                shield_rect = shield_img.get_rect(center=rect.center)
+                surface.blit(shield_img, shield_rect)
 
-            surface.blit(shield_img, shield_rect)
+            elif self.shield_fade_start_time:
+                elapsed = time.time() - self.shield_fade_start_time
+                if elapsed < self.shield_fade_duration:
+                    alpha = int(255 * (1 - elapsed / self.shield_fade_duration))
+                    shield_img = self.shield_image if centered else self.shield_image_scaled
+                    fading_img = shield_img.copy()
+                    fading_img.set_alpha(alpha)
+                    shield_rect = fading_img.get_rect(center=rect.center)
+                    surface.blit(fading_img, shield_rect)
+                else:
+                    self.shield_fade_start_time = None
 
         surface.blit(image, rect)
-
-    def move(self, dx, dy):
-        self.rect.x += dx
-        self.rect.y += dy
-
-    def take_damage(self, amount):
-        if self.shield > 0:
-            damage_to_shield = min(self.shield, amount)
-            self.shield -= damage_to_shield
-            amount -= damage_to_shield
-        if amount > 0:
-            self.health -= amount
 
 class EnemyShip(Ship):
     def __init__(self, image_path, x, y, max_health=100, max_shield=50):
@@ -82,4 +96,4 @@ class EnemyShip(Ship):
         super().take_damage(amount)
 
     def draw(self, surface):
-        surface.blit(self.image, self.rect)
+        super().draw(surface, centered=False, show_shield=False)

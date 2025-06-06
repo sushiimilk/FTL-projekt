@@ -115,9 +115,6 @@ class GameScreen:
 
         self.cursor = Cursor()
 
-        self.health = 100
-        self.shields = 50
-
         #player ship
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
         self.ship.move(-300, 35)
@@ -151,20 +148,13 @@ class GameScreen:
 
         self.attack_button = Button(screen.get_width()//2-59, 600, 118, 40, "ATTACK", pygame.font.Font(FONT_PATH, 28))
 
-
     def enemy_attack(self, game):
         now = time.time()
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
             self.last_enemy_attack = now
-            if self.shields > 0:
-                blocked = min(15, self.shields)
-                self.shields -= blocked
-                self.health -= max(0, 15 - blocked)
-            else:
-                self.health -= 15
-            if self.health <= 0:
+            self.ship.take_damage(random.randint(10,15))  # ✅ This triggers shield fade logic
+            if self.ship.health <= 0:
                 game.state = "death"
-
 
     def spawn_enemy(self):
         #zmiana tła
@@ -206,11 +196,10 @@ class GameScreen:
 
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
-        self.ship.shield = self.shields
         self.ship.draw(self.screen, centered =self.waiting_for_jump)
 
-        self.health_bar.update(self.health)
-        self.shield_bar.update(self.shields)
+        self.health_bar.update(self.ship.health)
+        self.shield_bar.update(self.ship.shield)
 
         self.health_bar.draw(self.screen)
         self.shield_bar.draw(self.screen)
