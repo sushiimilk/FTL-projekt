@@ -105,9 +105,9 @@ class GameScreen:
             "assets/Backgrounds/bg_blueStarcluster.png",
             "assets/Backgrounds/bg_lonelyRedStar.png",
             "assets/Backgrounds/bg_lonelystar.png",
-            "assets/Background/low_pulsar.png",
-            "assets/Background/low_sun.png",
-            "assets/Background/low_nebula.png",
+            "assets/Backgrounds/low_pulsar.png",
+            "assets/Backgrounds/low_sun.png",
+            "assets/Backgrounds/low_nebula.png",
         ]
         self.boss_background = "assets/Backgrounds/bg_final.png"
         self.last_background = None
@@ -119,7 +119,7 @@ class GameScreen:
 
         #player ship
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
-        self.ship.move(-300, 100)
+        self.ship.move(-300, 35)
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
 
