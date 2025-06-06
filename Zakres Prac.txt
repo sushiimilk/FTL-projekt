@@ -25,7 +25,7 @@ Szymon Rogowski
 
 
 Do zrobienia
-- coś dalej rysuje po zamknięciu gry
+
 - zeskalowanie statkow przeciwnika zeby się miesciły na ekranie
 - zwiekszyc attak speed flagshipa (boss)
 - odgapić od oficjalnej gry wygląd walki, w sensie pudełko w okól przeciwnika, strzały lecą poza ekran, renderują się ponownie albo coś tego typu
@@ -40,5 +40,6 @@ Do zrobienia
 - bronie na statkach i animacja strzałów
 - upgrade za kazdy pokonany przeciwnik, np szybsze strzelanie wiecej hp/shield
 - licznik który aktualnie jest stage (np zeby pisalo stage: 1)
+- coś dalej rysuje po zamknięciu gry na esc lub quit w death state
 
 

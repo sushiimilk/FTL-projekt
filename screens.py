@@ -50,7 +50,7 @@ class IntroScreen:
         self.typing_start_time = None
         self.text_speed = 30  # characters per second
 
-        self.jump_button = Button(520, 600, 120, 40, "JUMP", self.font)
+        self.jump_button = Button(screen.get_width()//2-37.5, 600, 95, 40, "JUMP", self.font)
 
     def get_typed_text(self):
         if self.typing_start_time is None:
@@ -136,7 +136,7 @@ class GameScreen:
 
         #przerwy miedzy przeciwnikami
         self.waiting_for_jump = False
-        self.jump_button = Button(520, 600, 120, 40, "JUMP", pygame.font.Font(FONT_PATH, 24))
+        self.jump_button = Button(screen.get_width()//2-47.5, 40, 95, 40, "JUMP", pygame.font.Font(FONT_PATH, 24))
 
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
@@ -149,7 +149,7 @@ class GameScreen:
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
 
-        self.attack_button = Button(520, 600, 160, 40, "ATTACK", pygame.font.Font(FONT_PATH, 24))
+        self.attack_button = Button(screen.get_width()//2-59, 600, 118, 40, "ATTACK", pygame.font.Font(FONT_PATH, 28))
 
 
     def enemy_attack(self, game):
