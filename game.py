@@ -1,5 +1,5 @@
 import pygame
-from screens import MenuScreen, GameScreen, IntroScreen, GameOver
+from screens import MenuScreen, GameScreen, IntroScreen, GameOver, Victory
 
 class Game:
     def __init__(self):
@@ -17,6 +17,7 @@ class Game:
         self.game_screen = GameScreen(self.screen)
         self.intro_screen = IntroScreen(self.screen)
         self.game_over_screen = GameOver(self.screen)
+        self.victory_screen = Victory(self.screen)
 
     def run(self):
         while self.running:
@@ -34,8 +35,8 @@ class Game:
                             self.intro_screen.handle_event(event, self)
                         case "death":
                             self.game_over_screen.handle_event(event, self)
-                        # case "victory":
-                        #     self.victory_screen.handle_event(event, self)
+                        case "victory":
+                            self.victory_screen.handle_event(event, self)
 
             # --- MUZYKA ---
             match self.state:
@@ -77,8 +78,8 @@ class Game:
                     self.game_screen.draw(self)
                 case "death":
                     self.game_over_screen.draw()
-                # case "victory":
-                #     self.victory_screen.draw()
+                case "victory":
+                    self.victory_screen.draw()
 
             pygame.display.flip()
             self.clock.tick(60)

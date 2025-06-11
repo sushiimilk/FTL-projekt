@@ -320,7 +320,6 @@ class GameScreen(ScreenBase):
                 self.spawn_enemy()
                 self.waiting_for_jump = False
             else:
-                print("WYGRANA")
                 game.state = "victory"
 
 
@@ -354,3 +353,33 @@ class GameOver(ScreenBase):
                     game.game_screen = GameScreen(game.screen)
                     game.intro_screen = IntroScreen(game.screen)
                     game.state = "menu"
+
+class Victory(ScreenBase):
+    def __init__(self, screen):
+        super().__init__(screen)
+        self.font = pygame.font.Font(FONT_PATH, 50)
+        self.smaller_font = pygame.font.Font(FONT_PATH, 20)
+        self.cursor = Cursor()
+        self.quit_button = Button((screen.get_width() // 2 - 55), 510, 110, 50, "QUIT", self.font)
+        self.menu_button = Button((screen.get_width() // 2 - 117), 450, 234, 50, "MAIN MENU", self.font)
+
+    def draw(self):
+        self.screen.fill((0, 0, 0))
+        text = self.font.render("MISSION SUCCESS", True, (0, 255, 0))
+        small_text = self.smaller_font.render("you made it back home!", True, (0, 255, 0))
+        self.screen.blit(text, ((self.screen.get_width() // 2 - text.get_width() // 2), 220))
+        self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
+        self.quit_button.draw(self.screen)
+        self.menu_button.draw(self.screen)
+        self.cursor.draw(self.screen)
+
+    def handle_event(self, event, game):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.quit_button.is_hovered():
+                game.running = False
+                pygame.quit()
+                return
+            if self.menu_button.is_hovered():
+                game.game_screen = GameScreen(game.screen)
+                game.intro_screen = IntroScreen(game.screen)
+                game.state = "menu"
