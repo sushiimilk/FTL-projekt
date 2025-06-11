@@ -1,7 +1,8 @@
 import pygame, random, time, math
-from ui import Button, Cursor, FONT_PATH
+from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
+from fonts import FONTS
 
 class ScreenBase:
     def __init__(self, screen):
@@ -13,7 +14,7 @@ class MenuScreen(ScreenBase):
         self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"),
                                                  screen.get_size())
         self.ship_image = pygame.image.load("assets/Kestrel/Kestrel Cruiser closed.png").convert_alpha()
-        self.font = pygame.font.Font(FONT_PATH, 40)
+        self.font = FONTS["large"]
         self.button = Button(1020, 50, 130, 40, "START", self.font)
         self.cursor = Cursor()
 
@@ -42,7 +43,7 @@ class IntroScreen(ScreenBase):
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png",
                          screen.get_width() // 2, screen.get_height() // 2)
         self.cursor = Cursor()
-        self.font = pygame.font.Font(FONT_PATH, 28)
+        self.font = FONTS["medium"]
 
         self.full_text = (
             "Your ship's hyperdrive has failed.\n"
@@ -71,7 +72,6 @@ class IntroScreen(ScreenBase):
 
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=True)
-
 
         #box behind the intro text
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
@@ -143,7 +143,7 @@ class GameScreen(ScreenBase):
 
         #przerwy miedzy przeciwnikami
         self.waiting_for_jump = False
-        self.jump_button = Button(screen.get_width()//2-47.5, 40, 95, 40, "JUMP", pygame.font.Font(FONT_PATH, 24))
+        self.jump_button = Button(screen.get_width()//2-47.5, 40, 95, 40, "JUMP", FONTS["small"])
 
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
@@ -158,8 +158,8 @@ class GameScreen(ScreenBase):
 
 
         #attak gracza
-        self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", pygame.font.Font(FONT_PATH, 28))
-        self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", pygame.font.Font(FONT_PATH, 28))
+        self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", FONTS["medium"])
+        self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", FONTS["medium"])
 
     def enemy_attack(self, game):
         now = time.time()
@@ -215,7 +215,7 @@ class GameScreen(ScreenBase):
         self.screen.blit(self.background, (0, 0))
 
         # STAGE 1,2,3,etc. 
-        font = pygame.font.Font(FONT_PATH, 36)
+        font = FONTS["large"]
         stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
         self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
 
@@ -329,8 +329,8 @@ class GameScreen(ScreenBase):
 class GameOver(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
-        self.font = pygame.font.Font(FONT_PATH, 50)
-        self.smaller_font = pygame.font.Font(FONT_PATH, 20)
+        self.font = FONTS["huge"]
+        self.smaller_font = FONTS["small"]
         self.cursor = Cursor()
         self.quit_button = Button((screen.get_width()//2 - 55), 510, 110, 50, "QUIT", self.font)
         self.menu_button = Button((screen.get_width()//2 - 117), 450, 234, 50, "MAIN MENU", self.font)
@@ -359,8 +359,8 @@ class GameOver(ScreenBase):
 class Victory(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
-        self.font = pygame.font.Font(FONT_PATH, 50)
-        self.smaller_font = pygame.font.Font(FONT_PATH, 20)
+        self.font = FONTS["huge"]
+        self.smaller_font = FONTS["small"]
         self.cursor = Cursor()
         self.quit_button = Button((screen.get_width() // 2 - 55), 510, 110, 50, "QUIT", self.font)
         self.menu_button = Button((screen.get_width() // 2 - 117), 450, 234, 50, "MAIN MENU", self.font)

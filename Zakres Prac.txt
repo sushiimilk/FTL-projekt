@@ -27,12 +27,12 @@ Szymon Rogowski
 - atak gracza i przeciwnika oparty o cooldown
 - dwa oddzielne guziki ataku (laser i rakietnica)
 - animacje dzialajacych silnikow
-- dziedziczenie super()
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
 - licznik który aktualnie jest stage (np zeby pisalo stage: 1)
 
 
 Do zrobienia
+- dziedziczenie super()
 - odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
 - zwiekszyc attak speed flagshipa albo inny modifier (boss)
 - animacja strzelania (pociski sa w folderze official ftl images)

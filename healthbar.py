@@ -1,5 +1,5 @@
 import pygame
-from ui import FONT_PATH
+from fonts import FONTS
 
 class Bar:
     def __init__(self, x, y, width, height, max_value, fill_color, label=""):
@@ -10,7 +10,7 @@ class Bar:
         self.border_color = (255, 255, 255)
         self.background_color = (20, 20, 20)
         self.label = label
-        self.font = pygame.font.Font(FONT_PATH, 16)
+        self.font = FONTS["tiny"]
 
     def update(self, value):
         self.current_value = max(0, min(self.max_value, value))
