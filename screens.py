@@ -204,6 +204,12 @@ class GameScreen(ScreenBase):
                                     self.enemy.max_shield, (0, 150, 255),
                                     "ENEMY SHIELDS")
 
+    def is_laser_ready(self):
+        return (time.time() - self.last_player_laser_attack) >= self.laser_attack_cooldown
+
+    def is_rocket_ready(self):
+        return (time.time() - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
+
     def draw_enemy(self):
         self.enemy.draw(self.screen)
         self.enemy_health_bar.update(self.enemy.health)
@@ -266,11 +272,8 @@ class GameScreen(ScreenBase):
         self.shield_bar.draw(self.screen)
 
         #Enemy ship and bars
-
         if not self.waiting_for_jump and self.enemy.health > 0:
             self.draw_enemy()
-
-
 
         #auto atak przeciwnika
         if not self.waiting_for_jump and self.enemy.health > 0:
@@ -281,8 +284,8 @@ class GameScreen(ScreenBase):
         else:
             # Sprawdź cooldowny
             now = time.time()
-            laser_ready = (now - self.last_player_laser_attack) >= self.laser_attack_cooldown
-            rocket_ready = (now - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
+            laser_ready = self.is_laser_ready()
+            rocket_ready = self.is_rocket_ready() #(now - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
 
             laser_color = (0, 200, 0) if laser_ready else (200, 0, 0)   # zielony lub czerwony
             rocket_color = (0, 200, 0) if rocket_ready else (200, 0, 0) # zielony lub czerwony
@@ -300,17 +303,15 @@ class GameScreen(ScreenBase):
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.laser_button.is_hovered():
             now = time.time()
-            if now - self.last_player_laser_attack >= self.laser_attack_cooldown:
-                self.last_player_laser_attack = now
-                #atakowanie przeciwnika laserem
+            if self.is_laser_ready():
+                self.last_player_laser_attack = time.time()
                 self.enemy.take_damage(random.randint(18, 25))
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
             now = time.time()
-            if now - self.last_player_rocket_attack >= self.rocket_attack_cooldown:
-                self.last_player_rocket_attack = now
-                #atakowanie przeciwnika rakieeeetą
-                self.enemy.take_damage(random.randint(40, 60))
+            if self.is_rocket_ready():
+                self.last_player_rocket_attack = time.time()
+                self.enemy.take_damage(random.randint(24, 35))
 
         if self.enemy.health <= 0 and not self.waiting_for_jump:
             self.waiting_for_jump = True
