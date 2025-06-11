@@ -3,9 +3,13 @@ from ui import Button, Cursor, FONT_PATH
 from ship import Ship, EnemyShip
 from healthbar import Bar
 
-class MenuScreen:
+class ScreenBase:
     def __init__(self, screen):
         self.screen = screen
+
+class MenuScreen(ScreenBase):
+    def __init__(self, screen):
+        super().__init__(screen)
         self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"),
                                                  screen.get_size())
         self.ship_image = pygame.image.load("assets/Kestrel/Kestrel Cruiser closed.png").convert_alpha()
@@ -30,9 +34,9 @@ class MenuScreen:
 
 
 
-class IntroScreen:
+class IntroScreen(ScreenBase):
     def __init__(self, screen):
-        self.screen = screen
+        super().__init__(screen)
         self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
                                                  screen.get_size())
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png",
@@ -96,10 +100,10 @@ class IntroScreen:
         self.start()
 
 
-class GameScreen:
+class GameScreen(ScreenBase):
     def __init__(self, screen):
+        super().__init__(screen)
         #backgrounds and stuff
-        self.screen = screen
 
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
@@ -117,15 +121,19 @@ class GameScreen:
 
         #player ship
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
+        self.engine_image = pygame.image.load("assets/Kestrel/Kestrel Engine.png").convert_alpha()
+        self.engine_image = pygame.transform.rotate(self.engine_image, 90)  # obrót o 90 stopni w lewo
         self.ship.move(-300, 35)
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
 
         #Atak gracza (cooldowny)
-        self.player_attack_cooldown = 1.5  #(sekundy)
-        self.enemy_attack_cooldown = 2.0   
-        self.last_player_attack = 0
-        self.last_enemy_attack = 0
+        self.laser_attack_cooldown = 1.5        #cooldown lasera (sekundy)
+        self.rocket_attack_cooldown = 4.0       #cooldown rakiety 
+        self.enemy_attack_cooldown = 2.0        #cooldown ataku przeciwnika
+        self.last_player_laser_attack = 0      # czas ostatniego ataku laserem
+        self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
+        self.last_enemy_attack = 0              # czas ostatniego ataku przeciwnika
 
         #Enemy ships and stage:
 
@@ -146,13 +154,17 @@ class GameScreen:
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
 
-        self.attack_button = Button(screen.get_width()//2-59, 600, 118, 40, "ATTACK", pygame.font.Font(FONT_PATH, 28))
+
+        #attak gracza
+        self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", pygame.font.Font(FONT_PATH, 28))
+        self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", pygame.font.Font(FONT_PATH, 28))
 
     def enemy_attack(self, game):
         now = time.time()
+        #atak przeciwnika
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
             self.last_enemy_attack = now
-            self.ship.take_damage(random.randint(10,15))  # ✅ This triggers shield fade logic
+            self.ship.take_damage(random.randint(10,15))  
             if self.ship.health <= 0:
                 game.state = "death"
 
@@ -181,9 +193,6 @@ class GameScreen:
         self.enemy = EnemyShip(enemy_image, x=900, y=200)
         self.enemy.move(0, 200)
 
-        #Reset tarczy gracza
-        self.shields = self.shield_bar.max_value
-
         #Tarcze i hp przeciwnika
         self.enemy_health_bar = Bar(900, 60, 200, 24,
                                     self.enemy.max_health, (200, 0, 0),
@@ -193,10 +202,60 @@ class GameScreen:
                                     self.enemy.max_shield, (0, 150, 255),
                                     "ENEMY SHIELDS")
 
+    def draw_enemy(self):
+        self.enemy.draw(self.screen)
+        self.enemy_health_bar.update(self.enemy.health)
+        self.enemy_shield_bar.update(self.enemy.shield)
+        self.enemy_health_bar.draw(self.screen)
+        self.enemy_shield_bar.draw(self.screen)
 
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
-        self.ship.draw(self.screen, centered =self.waiting_for_jump)
+
+        # STAGE 1,2,3,etc. 
+        font = pygame.font.Font(FONT_PATH, 36)
+        stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
+        self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
+
+        self.ship.draw(self.screen, centered=self.waiting_for_jump)
+
+        #animacja silnikow
+        t = time.time()
+        #alpha silnikow w zależności od czasu
+        #100 to minimalna przezroczystosc, 255 to maksymalna
+        #135 to amplituda, 0.5 to przesuniecie fazowe
+        #1 Hz to czestotliwosc, czyli 1 pelny cykl na sekundee
+        engine_alpha = int(100 + 135 * (0.5 + 0.5 * math.sin(2 * math.pi * t * 1)))
+
+        engine_image = self.engine_image.copy()
+        engine_image.set_alpha(engine_alpha)
+
+        if not self.waiting_for_jump and self.enemy.health > 0:
+            #1 silnik gora
+            x = 114
+            y = 274
+            self.screen.blit(engine_image, (x, y))
+            #2 silnik gora
+            x = 114
+            y = 263
+            self.screen.blit(engine_image, (x, y))
+            #3 silnik gora
+            x = 114
+            y = 292
+            self.screen.blit(engine_image, (x, y))
+            #1 silnik dol
+            x = 114
+            y = 449 + 14
+            self.screen.blit(engine_image, (x, y))
+            #2 silnik dol
+            x = 114
+            y = 449
+            self.screen.blit(engine_image, (x, y))
+            #3 silnik dol
+            x = 114
+            y = 449 + 28
+            self.screen.blit(engine_image, (x, y))
+
 
         self.health_bar.update(self.ship.health)
         self.shield_bar.update(self.ship.shield)
@@ -204,14 +263,12 @@ class GameScreen:
         self.health_bar.draw(self.screen)
         self.shield_bar.draw(self.screen)
 
-        #Enemy ships and stuff
+        #Enemy ship and bars
 
         if not self.waiting_for_jump and self.enemy.health > 0:
-            self.enemy.draw(self.screen)
-            self.enemy_health_bar.update(self.enemy.health)
-            self.enemy_shield_bar.update(self.enemy.shield)
-            self.enemy_health_bar.draw(self.screen)
-            self.enemy_shield_bar.draw(self.screen)
+            self.draw_enemy()
+
+
 
         #auto atak przeciwnika
         if not self.waiting_for_jump and self.enemy.health > 0:
@@ -220,7 +277,16 @@ class GameScreen:
         if self.waiting_for_jump:
             self.jump_button.draw(self.screen)
         else:
-            self.attack_button.draw(self.screen)
+            # Sprawdź cooldowny
+            now = time.time()
+            laser_ready = (now - self.last_player_laser_attack) >= self.laser_attack_cooldown
+            rocket_ready = (now - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
+
+            laser_color = (0, 200, 0) if laser_ready else (200, 0, 0)   # zielony lub czerwony
+            rocket_color = (0, 200, 0) if rocket_ready else (200, 0, 0) # zielony lub czerwony
+
+            self.laser_button.draw(self.screen, color=laser_color) #przycisk laseru
+            self.rocket_button.draw(self.screen, color=rocket_color) #przycisk rakiety
         self.cursor.draw(self.screen)
 
 
@@ -230,16 +296,23 @@ class GameScreen:
                 game.running = False
                 pygame.quit()
 
-        if event.type == pygame.MOUSEBUTTONDOWN and self.attack_button.is_hovered():
+        if event.type == pygame.MOUSEBUTTONDOWN and self.laser_button.is_hovered():
             now = time.time()
-            if now - self.last_player_attack >= self.player_attack_cooldown:
-                self.last_player_attack = now
-                # Atakowanie przeciwnika
+            if now - self.last_player_laser_attack >= self.laser_attack_cooldown:
+                self.last_player_laser_attack = now
+                #atakowanie przeciwnika laserem
                 self.enemy.take_damage(random.randint(18, 25))
+
+        if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
+            now = time.time()
+            if now - self.last_player_rocket_attack >= self.rocket_attack_cooldown:
+                self.last_player_rocket_attack = now
+                #atakowanie przeciwnika rakieeeetą
+                self.enemy.take_damage(random.randint(40, 60))
 
         if self.enemy.health <= 0 and not self.waiting_for_jump:
             self.waiting_for_jump = True
-            self.shields = 50
+            self.ship.shield = self.ship.max_shield
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered() and self.waiting_for_jump:
             self.stage += 1
@@ -252,13 +325,12 @@ class GameScreen:
 
 
 
-class GameOver:
+class GameOver(ScreenBase):
     def __init__(self, screen):
-        self.screen = screen
+        super().__init__(screen)
         self.font = pygame.font.Font(FONT_PATH, 50)
         self.smaller_font = pygame.font.Font(FONT_PATH, 20)
         self.cursor = Cursor()
-
         self.quit_button = Button((screen.get_width()//2 - 55), 510, 110, 50, "QUIT", self.font)
         self.menu_button = Button((screen.get_width()//2 - 117), 450, 234, 50, "MAIN MENU", self.font)
 
