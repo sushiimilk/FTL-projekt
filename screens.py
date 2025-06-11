@@ -284,11 +284,8 @@ class GameScreen(ScreenBase):
         else:
             # Sprawdź cooldowny
             now = time.time()
-            laser_ready = self.is_laser_ready()
-            rocket_ready = self.is_rocket_ready() #(now - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
-
-            laser_color = (0, 200, 0) if laser_ready else (200, 0, 0)   # zielony lub czerwony
-            rocket_color = (0, 200, 0) if rocket_ready else (200, 0, 0) # zielony lub czerwony
+            laser_color = (0, 200, 0) if self.is_laser_ready() else (200, 0, 0)   # zielony lub czerwony
+            rocket_color = (0, 200, 0) if self.is_rocket_ready() else (200, 0, 0) # zielony lub czerwony
 
             self.laser_button.draw(self.screen, color=laser_color) #przycisk laseru
             self.rocket_button.draw(self.screen, color=rocket_color) #przycisk rakiety
