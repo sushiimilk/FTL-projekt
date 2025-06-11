@@ -4,6 +4,9 @@ from screens import MenuScreen, GameScreen, IntroScreen, GameOver
 class Game:
     def __init__(self):
         pygame.init()
+        pygame.mixer.init()
+        self.current_music = None
+
         self.screen = pygame.display.set_mode((1200, 700))
         pygame.display.set_caption("FTL Clone")
         self.clock = pygame.time.Clock()
@@ -31,6 +34,38 @@ class Game:
                             self.intro_screen.handle_event(event, self)
                         case "death":
                             self.game_over_screen.handle_event(event, self)
+                        # case "victory":
+                        #     self.victory_screen.handle_event(event, self)
+
+            # --- MUZYKA ---
+            match self.state:
+                # case "menu":
+                #     if self.current_music != "menu":
+                #         pygame.mixer.music.load("assets/sound/menu_theme.wav")
+                #         pygame.mixer.music.set_volume(0.5)
+                #         pygame.mixer.music.play(-1)
+                #         self.current_music = "menu"
+
+                case "intro" | "game":
+                    if self.current_music != "game":
+                        pygame.mixer.music.load("assets/sound/game theme.wav")
+                        pygame.mixer.music.set_volume(0.5)
+                        pygame.mixer.music.play(-1)
+                        self.current_music = "game"
+
+                # case "death":
+                #     if self.current_music != "death":
+                #         pygame.mixer.music.load("assets/sound/gameover_theme.wav")
+                #         pygame.mixer.music.set_volume(0.5)
+                #         pygame.mixer.music.play(-1)
+                #         self.current_music = "death"
+                #
+                # case "victory":
+                #     if self.current_music != "victory":
+                #         pygame.mixer.music.load("assets/sound/victory_theme.wav")
+                #         pygame.mixer.music.set_volume(0.5)
+                #         pygame.mixer.music.play(-1)
+                #         self.current_music = "victory"
 
             # ✅ DRAWING SCREENS
             match self.state:
@@ -42,6 +77,8 @@ class Game:
                     self.game_screen.draw(self)
                 case "death":
                     self.game_over_screen.draw()
+                # case "victory":
+                #     self.victory_screen.draw()
 
             pygame.display.flip()
             self.clock.tick(60)
