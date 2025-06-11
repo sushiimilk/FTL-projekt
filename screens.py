@@ -76,7 +76,7 @@ class IntroScreen(ScreenBase):
         #box behind the intro text
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 160))
-        self.screen.blit(box_surface, (50, 80))
+        self.screen.blit(box_surface, (self.screen.get_width() // 2 - 350, 80))
 
         # intro text
         current_text = self.get_typed_text()
@@ -84,7 +84,9 @@ class IntroScreen(ScreenBase):
         y_offset = 100
         for line in lines:
             text_surf = self.font.render(line, True, (255, 255, 255))
-            self.screen.blit(text_surf, (80, y_offset))
+            text_rect = text_surf.get_rect(centerx=self.screen.get_width() // 2)
+            text_rect.top = y_offset
+            self.screen.blit(text_surf, text_rect)
             y_offset += 40
 
         self.jump_button.draw(self.screen)
