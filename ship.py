@@ -38,7 +38,7 @@ class Ship:
             blocked = min(self.shield, amount)
             self.shield -= blocked
             amount -= blocked
-            if self.shield <=0:
+            if self.shield <= 0 and self.shield_fade_start_time is None:
                 self.shield_fade_start_time = time.time()
 
         if amount > 0:
