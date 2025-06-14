@@ -32,6 +32,11 @@ Szymon Rogowski
 
 
 Do zrobienia
+-remove player attack logic replace with projectile damage
+poprawic strzelania i usuwanie pociskow
+strzelanie od przeciwnikow
+
+
 - dziedziczenie super()
 - odnawianie się shielda z czasem, np jak zbite do zera to 5 sekund potem zaczyna się odnawiać
 - zwiekszyc attak speed flagshipa albo inny modifier (boss)

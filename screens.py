@@ -3,6 +3,7 @@ from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
 from fonts import FONTS
+from projectiles import LaserProjectile, RocketProjectile
 
 class ScreenBase:
     def __init__(self, screen):
@@ -169,6 +170,10 @@ class GameScreen(ScreenBase):
         self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", FONTS["medium"])
         self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", FONTS["medium"])
 
+        # ---PROJECTILES---
+        self.laser_projectiles = []
+        self.rocket_projectiles = []
+
     def enemy_attack(self, game):
         now = time.time()
         #atak przeciwnika
@@ -316,8 +321,22 @@ class GameScreen(ScreenBase):
 
             self.laser_button.draw(self.screen, color=laser_color) #przycisk laseru
             self.rocket_button.draw(self.screen, color=rocket_color) #przycisk rakiety
-        self.cursor.draw(self.screen)
 
+        # ---PROJECTILES UPDATE & DRAW---
+        # Laser projectiles
+        for projectile in self.laser_projectiles:
+            projectile.update()
+            projectile.draw(self.screen)
+        # Remove inactive
+        self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
+
+        # Rocket projectiles
+        for projectile in self.rocket_projectiles:
+            projectile.update()
+            projectile.draw(self.screen)
+        self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
+
+        self.cursor.draw(self.screen)
 
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN:
@@ -325,17 +344,36 @@ class GameScreen(ScreenBase):
                 game.running = False
                 pygame.quit()
 
+        # ---LASER SHOOTING---
         if event.type == pygame.MOUSEBUTTONDOWN and self.laser_button.is_hovered():
             now = time.time()
             if self.is_laser_ready():
                 self.last_player_laser_attack = time.time()
                 self.enemy.take_damage(random.randint(18, 25))
-
+                # Spawn laser projectile
+                # Laser gun position (barrel): adjust as needed
+                laser_gun_x = 390+30
+                laser_gun_y = 328+5
+                dx = 1  # rightwards
+                dy = 0
+                self.laser_projectiles.append(
+                    LaserProjectile(laser_gun_x, laser_gun_y, dx, dy, "assets/Projectiles/laser projectile.png", damage=0)
+                )
+        # ---ROCKET SHOOTING---
         if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
             now = time.time()
             if self.is_rocket_ready():
                 self.last_player_rocket_attack = time.time()
                 self.enemy.take_damage(random.randint(24, 35))
+                # Spawn rocket projectile
+                rocket_gun_x = 390+40
+                rocket_gun_y = 428+15
+                dx = 1
+                dy = 0
+                self.rocket_projectiles.append(
+                    RocketProjectile(rocket_gun_x, rocket_gun_y, dx, dy, "assets/Projectiles/missile.png", damage=0)
+                )
+
 
         if self.enemy.health <= 0 and not self.waiting_for_jump:
             self.waiting_for_jump = True
