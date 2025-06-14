@@ -175,8 +175,7 @@ class GameScreen(ScreenBase):
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
             # atak przeciwnika
             self.last_enemy_attack = now
-            self.ship.take_damage(random.randint(10,15))  
-            print(f"Gracz otrzymał atak od przeciwnika! Czas: {time.time()}")
+            self.ship.take_damage(random.randint(10,15))
             if self.ship.health <= 0:
                 game.state = "death"
 
@@ -252,18 +251,19 @@ class GameScreen(ScreenBase):
         engine_image.set_alpha(engine_alpha)
 
         # ---POZYCJE BRONI---
-        laser_pos = (350, 600)
-        rocket_pos = (500, 600)
+        laser_pos = (390, 328)
+        rocket_pos = (390, 428)
 
-        if self.is_laser_ready():
-            self.screen.blit(self.laser_ready_img, laser_pos)
-        else:
-            self.screen.blit(self.laser_unready_img, laser_pos)
+        if not self.waiting_for_jump:
+            if self.is_laser_ready():
+                self.screen.blit(self.laser_ready_img, laser_pos)
+            else:
+                self.screen.blit(self.laser_unready_img, laser_pos)
 
-        if self.is_rocket_ready():
-            self.screen.blit(self.rocket_ready_img, rocket_pos)
-        else:
-            self.screen.blit(self.rocket_unready_img, rocket_pos)
+            if self.is_rocket_ready():
+                self.screen.blit(self.rocket_ready_img, rocket_pos)
+            else:
+                self.screen.blit(self.rocket_unready_img, rocket_pos)
 
         if not self.waiting_for_jump and self.enemy.health > 0:
             #1 silnik gora
