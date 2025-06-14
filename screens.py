@@ -1,4 +1,4 @@
-import pygame, random, time, math
+import random, math
 from ui import *
 from ship import *
 from healthbar import Bar
@@ -105,7 +105,7 @@ class IntroScreen(ScreenBase):
 
 
 class Explosion:
-    def __init__(self, pos, sprite_path, frame_size=(64, 64), frame_count=16, frame_duration=0.04):
+    def __init__(self, pos, sprite_path, frame_size=(512, 512), frame_count=64, frame_duration=0.01):
         self.frames = []
         self.load_frames(sprite_path, frame_size, frame_count)
         self.index = 0
@@ -116,8 +116,14 @@ class Explosion:
 
     def load_frames(self, sprite_path, frame_size, frame_count):
         sheet = pygame.image.load(sprite_path).convert_alpha()
+        sheet_width, sheet_height = sheet.get_size()
+        frames_per_row = sheet_width // frame_size[0]
         for i in range(frame_count):
-            frame = sheet.subsurface((i * frame_size[0], 0, frame_size[0], frame_size[1]))
+            row = i // frames_per_row
+            col = i % frames_per_row
+            x = col * frame_size[0]
+            y = row * frame_size[1]
+            frame = sheet.subsurface((x, y, frame_size[0], frame_size[1]))
             self.frames.append(frame)
 
     def update(self, dt):
@@ -205,6 +211,7 @@ class GameScreen(ScreenBase):
         self.laser_projectiles = []
         self.rocket_projectiles = []
         self.explosions = []
+        self.enemy_destroyed_explosion_played = False
 
     def enemy_attack(self, game):
         now = time.time()
@@ -343,9 +350,22 @@ class GameScreen(ScreenBase):
         if not self.waiting_for_jump and self.enemy.health > 0:
             self.enemy_attack(game)
 
+        # ---ENEMY DESTROYED EXPLOSION---
         if self.enemy.health <= 0 and not self.waiting_for_jump:
-            self.waiting_for_jump = True
-            self.ship.shield = self.ship.max_shield
+            if not self.enemy_destroyed_explosion_played:
+                # Center explosion on enemy ship
+                enemy_center = self.enemy.rect.center
+                self.explosions.append(
+                    Explosion(
+                        enemy_center,
+                        sprite_path="assets/explosions/explosion 4.png",
+                        frame_size=(512, 512),
+                        frame_count=64
+                    )
+                )
+                self.enemy_destroyed_explosion_played = True
+
+
 
         if self.waiting_for_jump:
             self.jump_button.draw(self.screen)
@@ -355,8 +375,8 @@ class GameScreen(ScreenBase):
             laser_color = (0, 200, 0) if self.is_laser_ready() else (200, 0, 0)   # zielony lub czerwony
             rocket_color = (0, 200, 0) if self.is_rocket_ready() else (200, 0, 0) # zielony lub czerwony
 
-            self.laser_button.draw(self.screen, color=laser_color) #przycisk laseru
-            self.rocket_button.draw(self.screen, color=rocket_color) #przycisk rakiety
+            self.laser_button.draw(self.screen, color=laser_color)      #przycisk laseru
+            self.rocket_button.draw(self.screen, color=rocket_color)    #przycisk rakiety
 
         # ---PROJECTILES UPDATE, COLLISION & DRAW---
         # Laser projectiles
@@ -372,7 +392,7 @@ class GameScreen(ScreenBase):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
                         enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.4)
+                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10,100))
                 else:
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
@@ -384,10 +404,9 @@ class GameScreen(ScreenBase):
                         self.explosions.append(
                             Explosion(
                                 projectile.rect.center,
-                                sprite_path="z neta/explosion 1.png",  # <-- Corrected path
-                                frame_size=(64, 64),                   # <-- Adjust if your sheet uses a different size
-                                frame_count=16,                        # <-- Adjust if your sheet has a different frame count
-                                frame_duration=0.04
+                                sprite_path="assets/explosions/explosion 1h.png",
+                                frame_size=(256, 256),
+                                frame_count=64,
                             )
                         )
             projectile.draw(self.screen)
@@ -401,13 +420,12 @@ class GameScreen(ScreenBase):
                 projectile.collision_point = None
                 projectile.required_depth = None
             if self.enemy.health > 0:
-
                 if not projectile.collision_detected:
                     if projectile.rect.colliderect(self.enemy.rect):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
                         enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.4)
+                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10,100))
                 else:
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
@@ -416,7 +434,15 @@ class GameScreen(ScreenBase):
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
                         # Rocket explosion
-                        self.explosions.append(Explosion(projectile.rect.center, sprite_path="assets/explosions/explosion 4.png"))
+                        explosion_pos = (projectile.rect.centerx + 90, projectile.rect.centery)
+                        self.explosions.append(
+                            Explosion(
+                                explosion_pos,
+                                sprite_path="assets/explosions/explosion 2h.png",
+                                frame_size=(256, 256),
+                                frame_count=64,
+                            )
+                        )
             projectile.draw(self.screen)
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
 
@@ -426,6 +452,10 @@ class GameScreen(ScreenBase):
             explosion.update(dt)
             explosion.draw(self.screen)
         self.explosions = [e for e in self.explosions if not e.finished]
+
+        # Wait for all explosions to finish before allowing jump
+        if self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and not self.explosions and not self.waiting_for_jump:
+            self.waiting_for_jump = True
 
         # Remove all projectiles if waiting for jump
         if self.waiting_for_jump:
@@ -472,6 +502,8 @@ class GameScreen(ScreenBase):
             if self.stage <= 5:
                 self.spawn_enemy()
                 self.waiting_for_jump = False
+                self.enemy_destroyed_explosion_played = False  # Reset for next enemy
+                self.ship.shield = self.ship.max_shield
             else:
                 game.state = "victory"
 

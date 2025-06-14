@@ -8,7 +8,7 @@ class Ship:
         self.full_image = original
 
         #combat rozmiar
-        self.scaled_image = pygame.transform.smoothscale(original, ((int(w * scale), int(h * scale))))
+        self.scaled_image = pygame.transform.smoothscale(original, (int(w * scale), int(h * scale)))
 
         self.image = original
 
@@ -90,5 +90,5 @@ class EnemyShip(Ship):
     def take_damage(self, amount):
         super().take_damage(amount)
 
-    def draw(self, surface):
-        super().draw(surface, centered=False, show_shield=False)
+    def draw(self, surface, centered=False, show_shield=False):
+        super().draw(surface, centered=centered, show_shield=show_shield)
