@@ -3,7 +3,6 @@ from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
 from fonts import FONTS
-import time
 
 class ScreenBase:
     def __init__(self, screen):
@@ -100,6 +99,7 @@ class IntroScreen(ScreenBase):
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.jump_button.is_hovered():
                 game.state = "game"
+                game.game_screen.last_enemy_attack = time.time() # ---LOGIKA ZEBY PRZECIWNIK POCZEKAL Z ATAKIEM
         self.start()
 
 
@@ -130,13 +130,18 @@ class GameScreen(ScreenBase):
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
 
+        # ---BRONIE---
+        self.laser_ready_img = pygame.image.load("assets/Kestrel/Laser ready.png").convert_alpha()
+        self.laser_unready_img = pygame.image.load("assets/Kestrel/Laser unready.png").convert_alpha()
+        self.rocket_ready_img = pygame.image.load("assets/Kestrel/Rocket ready.png").convert_alpha()
+        self.rocket_unready_img = pygame.image.load("assets/Kestrel/Rocket unready.png").convert_alpha()
+
         #Atak gracza (cooldowny)
         self.laser_attack_cooldown = 1.5        #cooldown lasera (sekundy)
         self.rocket_attack_cooldown = 4.0       #cooldown rakiety 
         self.enemy_attack_cooldown = 2.0        #cooldown ataku przeciwnika
         self.last_player_laser_attack = 0      # czas ostatniego ataku laserem
         self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
-        self.last_enemy_attack = 0              # czas ostatniego ataku przeciwnika
 
         #Enemy ships and stage:
 
@@ -228,6 +233,7 @@ class GameScreen(ScreenBase):
 
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
+        self.ship.draw(self.screen, centered=self.waiting_for_jump)
 
         # STAGE 1,2,3,etc. 
         font = FONTS["large"]
@@ -244,6 +250,20 @@ class GameScreen(ScreenBase):
 
         engine_image = self.engine_image.copy()
         engine_image.set_alpha(engine_alpha)
+
+        # ---POZYCJE BRONI---
+        laser_pos = (350, 600)
+        rocket_pos = (500, 600)
+
+        if self.is_laser_ready():
+            self.screen.blit(self.laser_ready_img, laser_pos)
+        else:
+            self.screen.blit(self.laser_unready_img, laser_pos)
+
+        if self.is_rocket_ready():
+            self.screen.blit(self.rocket_ready_img, rocket_pos)
+        else:
+            self.screen.blit(self.rocket_unready_img, rocket_pos)
 
         if not self.waiting_for_jump and self.enemy.health > 0:
             #1 silnik gora
