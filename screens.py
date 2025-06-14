@@ -249,7 +249,7 @@ class GameScreen(ScreenBase):
         #alpha silnikow w zależności od czasu
         #100 to minimalna przezroczystosc, 255 to maksymalna
         #135 to amplituda, 0.5 to przesuniecie fazowe
-        #1 Hz to czestotliwosc, czyli 1 pelny cykl na sekundee
+        #1 Hz to czstotliwosc, czyli 1 pelny cykl na sekundee
         engine_alpha = int(100 + 135 * (0.5 + 0.5 * math.sin(2 * math.pi * t * 1)))
 
         engine_image = self.engine_image.copy()
