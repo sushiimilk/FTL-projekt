@@ -7,6 +7,11 @@ class Game:
         pygame.mixer.init()
         self.current_music = None
 
+        # --Stat tracking--
+        self.total_damage_dealt = 0
+        self.start_time = None
+        self.victory_time = None  # ✅ Add this
+
         self.screen = pygame.display.set_mode((1200, 700))
         pygame.display.set_caption("FTL Clone")
         self.clock = pygame.time.Clock()
@@ -79,7 +84,7 @@ class Game:
                 case "death":
                     self.game_over_screen.draw()
                 case "victory":
-                    self.victory_screen.draw()
+                    self.victory_screen.draw(self)
 
             pygame.display.flip()
             self.clock.tick(60)

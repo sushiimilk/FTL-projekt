@@ -125,6 +125,7 @@ class IntroScreen(ScreenBase):
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.jump_button.is_hovered():
                 game.state = "game"
+                game.start_time = time.time() # do statów
                 game.game_screen.last_enemy_attack = time.time() # ---LOGIKA ZEBY PRZECIWNIK POCZEKAL Z ATAKIEM
         self.start()
 
@@ -180,7 +181,7 @@ class GameScreen(ScreenBase):
         self.sfx_explosion = pygame.mixer.Sound("assets/sound/rocket_explosion.wav")
         self.sfx_player_hit = pygame.mixer.Sound("assets/sound/player_damage.wav")
         self.sfx_laser.set_volume(0.6)
-        self.sfx_explosion.set_volume(0.4)
+        self.sfx_explosion.set_volume(0.3)
         self.sfx_player_hit.set_volume(0.5)
 
         # --Backgrounds--
@@ -263,7 +264,7 @@ class GameScreen(ScreenBase):
         self.enemy_attack(game)
         self.spawn_enemy_explosion()
         self.draw_jump_button_or_weapons()
-        self.update_projectile_collisions()
+        self.update_projectile_collisions(game)
         self.draw_projectiles()
         self.draw_explosions()
         self.cleanup_after_explosions()
@@ -339,6 +340,9 @@ class GameScreen(ScreenBase):
         if self.waiting_for_jump:
             self.laser_projectiles.clear()
             self.rocket_projectiles.clear()
+            self.sfx_explosion.stop()
+            self.sfx_laser.stop()
+            self.sfx_player_hit.stop()
 
     def draw_projectiles(self):
         pass  # Placeholder for full projectile drawing logic
@@ -407,9 +411,10 @@ class GameScreen(ScreenBase):
                     self.waiting_for_jump = False
                     self.ship.shield = self.ship.max_shield
                 else:
+                    game.victory_time = int(time.time() - game.start_time)
                     game.state = "victory"
 
-    def update_projectile_collisions(self):
+    def update_projectile_collisions(self, game):
         def process_projectile(proj_list, is_rocket):
             for projectile in proj_list:
                 projectile.update()
@@ -430,6 +435,7 @@ class GameScreen(ScreenBase):
                         distance = (dx ** 2 + dy ** 2) ** 0.5
                         if projectile.required_depth and distance >= projectile.required_depth:
                             self.enemy.take_damage(projectile.damage)
+                            game.total_damage_dealt += projectile.damage
                             self.sfx_explosion.play()
                             projectile.active = False
                             explosion_img = "assets/explosions/explosion 2h.png" if is_rocket else "assets/explosions/explosion 1h.png"
@@ -707,13 +713,20 @@ class Victory(ScreenBase):
         self.quit_button = Button((screen.get_width() // 2 - 55), 510, 110, 50, "QUIT", self.font)
         self.menu_button = Button((screen.get_width() // 2 - 117), 450, 234, 50, "MAIN MENU", self.font)
 
-    def draw(self):
+    def draw(self, game):
         if not pygame.display.get_init():
             return
         self.screen.fill((0, 0, 0))
         text = self.font.render("MISSION SUCCESS", True, (0, 255, 0))
         small_text = self.smaller_font.render("you made it back home!", True, (0, 255, 0))
         self.draw_quit_menu_buttons(text, small_text, self.quit_button, self.menu_button, self.cursor)
+
+        duration = game.victory_time if game.victory_time is not None else 0
+        damage = game.total_damage_dealt
+        summary_text = f"Time: {duration} seconds | Damage Dealt: {damage}"
+        summary_surf = self.smaller_font.render(summary_text, True, (255, 255, 255))
+        self.screen.blit(summary_surf, (
+            self.screen.get_width() // 2 - summary_surf.get_width() // 2, 320))
 
     def handle_event(self, event, game):
         if self.handle_quit_menu_buttons(event, game, self.quit_button, self.menu_button):
