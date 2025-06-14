@@ -3,6 +3,7 @@ from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
 from fonts import FONTS
+import time
 
 class ScreenBase:
     def __init__(self, screen):
@@ -165,8 +166,10 @@ class GameScreen(ScreenBase):
         now = time.time()
         #atak przeciwnika
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            # atak przeciwnika
             self.last_enemy_attack = now
             self.ship.take_damage(random.randint(10,15))  
+            print(f"Gracz otrzymał atak od przeciwnika! Czas: {time.time()}")
             if self.ship.health <= 0:
                 game.state = "death"
 
@@ -203,6 +206,10 @@ class GameScreen(ScreenBase):
         self.enemy_shield_bar = Bar(900, 110, 200, 24,
                                     self.enemy.max_shield, (0, 150, 255),
                                     "ENEMY SHIELDS")
+        
+        # Ustawienie czasu ostatniego ataku przeciwnika na teraz, aby wymusić cooldown na starcie rundy
+        self.last_enemy_attack = time.time()
+        self.enemy_attack_cooldown = 2.0  # lub inna wartość, jeśli chcesz mieć różne cooldowny
 
     def is_laser_ready(self):
         return (time.time() - self.last_player_laser_attack) >= self.laser_attack_cooldown
