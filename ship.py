@@ -75,7 +75,11 @@ class Ship:
         surface.blit(image, rect)
 
 class EnemyShip(Ship):
-    def __init__(self, image_path, x, y, max_health=100, max_shield=50):
+    def __init__(self, image_path, x, y, max_health=100, max_shield=50, scale=0.7):
+        super().__init__(image_path, x, y, max_health, max_shield)
+        self.variant = {}  # ✅ so code like self.enemy.variant["damage"] won't raise an error
+        self.attack_cooldown = 2.0  # ✅ default fallback
+
         original = pygame.image.load(image_path).convert_alpha()
         ow, oh = original.get_size()
         max_width, max_height = 400, 500

@@ -222,7 +222,6 @@ class GameScreen(ScreenBase):
         # --Cooldowny--
         self.laser_attack_cooldown = 1.5        #cooldown lasera (sekundy)
         self.rocket_attack_cooldown = 4.0       #cooldown rakiety
-        self.enemy_attack_cooldown = 2.0        #cooldown ataku przeciwnika
         self.last_player_laser_attack = 0      # czas ostatniego ataku laserem
         self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
         self.last_enemy_attack = 0
@@ -305,12 +304,16 @@ class GameScreen(ScreenBase):
             self.enemy_shield_bar.update(self.enemy.shield)
             self.enemy_health_bar.draw(self.screen)
             self.enemy_shield_bar.draw(self.screen)
+            variant_key = [k for k, v in self.enemy_variants.items() if v == self.enemy.variant][0]
+            variant_text = FONTS["small"].render(f"{variant_key.upper()} ENEMY", True, (255, 255, 255))
+            self.screen.blit(variant_text, (self.screen.get_width() // 2 - variant_text.get_width() // 2, 50))
 
     def enemy_attack(self, game):
         if not self.waiting_for_jump and self.enemy.health > 0:
-            if time.time() - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
-                self.ship.take_damage(random.randint(10, 15))
+                damage_range = self.enemy.variant["damage"]
+                self.ship.take_damage(random.randint(*damage_range))
                 self.sfx_player_hit.play()
                 if self.ship.health <= 0:
                     game.state = "death"
@@ -368,6 +371,16 @@ class GameScreen(ScreenBase):
             self.screen.get_size()
         )
 
+        # --Wariancje--
+        self.enemy_variants = {
+            "fast": {"hp": 80, "shield": 30, "damage": (8, 12), "cooldown": 1},
+            "standard": {"hp": 100, "shield": 50, "damage": (10, 15), "cooldown": 2.0},
+            "heavy": {"hp": 175, "shield": 75, "damage": (14, 20), "cooldown": 2.5},
+            "shielded": {"hp": 90, "shield": 100, "damage": (10, 15), "cooldown": 2.0},
+        }
+        variant_key = random.choice(list(self.enemy_variants.keys()))
+        variant = self.enemy_variants[variant_key]
+
         #Losowanie przeciwnika
         if self.stage < 5 and self.enemy_ship_paths:
             enemy_image = self.enemy_ship_paths.pop()
@@ -375,7 +388,11 @@ class GameScreen(ScreenBase):
             enemy_image = self.boss_ship_path
 
         #Rysowanie przeciwnika
-        self.enemy = EnemyShip(enemy_image, x=900, y=200)
+        self.enemy = EnemyShip(enemy_image, x=900, y=200,
+                               max_health=variant["hp"],
+                               max_shield=variant["shield"])
+        self.enemy.variant = variant
+        self.enemy.attack_cooldown = variant["cooldown"]
         self.enemy.move(0, 200)
 
         #Tarcze i hp przeciwnika
