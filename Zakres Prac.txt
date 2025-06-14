@@ -14,9 +14,6 @@ Wojciech Pruchnicki
 - animacja znikajacego shielda
 - srodkowanie statku po zabiciu przeciwnika
 
-
-
-
 Szymon Rogowski
 - Wyszukanie i sformatowanie grafik
 - Menu screen
@@ -30,12 +27,25 @@ Szymon Rogowski
 - guzik ataku czerwony podczas cooldownu, moze z animacja odswiezania sie, zielony gdy gotowy
 - licznik który aktualnie jest stage (np zeby pisalo stage: 1)
 
+Wspólnie
+- Bronie na statku
+- Animacje i logika pocisków
+
+
 
 Do zrobienia
 - remove player attack logic replace with projectile damage
 - poprawic strzelania i usuwanie pociskow
 - strzelanie od przeciwnikow
 - atak przeciwnika spod srodka
+
+czytelny podział na moduły lub pakiety,
+• bardziej zaawansowane animacje i efekty graficzne,
+• interaktywne i atrakcyjne menu startowe oraz menu końcowe (np. podsumowanie wyników gry),
+• dziedziczenie po co najmniej jednej własnej klasie,
+• podstawow ˛a opraw ˛e dźwi ˛ekow ˛a lub muzyk ˛e w tle,
+• możliwość zapisywania wyników gry do pliku lub podstawow ˛a personalizacj ˛e
+interfejsu użytkownika.
 
 
 - dziedziczenie super()
