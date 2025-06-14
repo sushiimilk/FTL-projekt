@@ -104,6 +104,37 @@ class IntroScreen(ScreenBase):
         self.start()
 
 
+class Explosion:
+    def __init__(self, pos, sprite_path, frame_size=(64, 64), frame_count=16, frame_duration=0.04):
+        self.frames = []
+        self.load_frames(sprite_path, frame_size, frame_count)
+        self.index = 0
+        self.frame_duration = frame_duration
+        self.timer = 0
+        self.pos = (pos[0] - frame_size[0] // 2, pos[1] - frame_size[1] // 2)
+        self.finished = False
+
+    def load_frames(self, sprite_path, frame_size, frame_count):
+        sheet = pygame.image.load(sprite_path).convert_alpha()
+        for i in range(frame_count):
+            frame = sheet.subsurface((i * frame_size[0], 0, frame_size[0], frame_size[1]))
+            self.frames.append(frame)
+
+    def update(self, dt):
+        if self.finished:
+            return
+        self.timer += dt
+        if self.timer >= self.frame_duration:
+            self.timer = 0
+            self.index += 1
+            if self.index >= len(self.frames):
+                self.finished = True
+
+    def draw(self, surface):
+        if not self.finished and self.index < len(self.frames):
+            surface.blit(self.frames[self.index], self.pos)
+
+
 class GameScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
@@ -170,9 +201,10 @@ class GameScreen(ScreenBase):
         self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", FONTS["medium"])
         self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", FONTS["medium"])
 
-        # ---PROJECTILES---
+        # ---PROJECTILES i wybuchy---
         self.laser_projectiles = []
         self.rocket_projectiles = []
+        self.explosions = []
 
     def enemy_attack(self, game):
         now = time.time()
@@ -296,8 +328,8 @@ class GameScreen(ScreenBase):
             y = 449 + 28
             self.screen.blit(engine_image, (x, y))
 
-
         self.health_bar.update(self.ship.health)
+
         self.shield_bar.update(self.ship.shield)
 
         self.health_bar.draw(self.screen)
@@ -330,28 +362,34 @@ class GameScreen(ScreenBase):
         # Laser projectiles
         for projectile in self.laser_projectiles:
             projectile.update()
-            # Initialize tracking attributes if not present
             if not hasattr(projectile, "collision_detected"):
                 projectile.collision_detected = False
                 projectile.collision_point = None
                 projectile.required_depth = None
-
             if self.enemy.health > 0:
                 if not projectile.collision_detected:
                     if projectile.rect.colliderect(self.enemy.rect):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
-                        # Set required depth as a fraction of enemy image width (e.g., 40%)
                         enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.5)
+                        projectile.required_depth = int(enemy_width * 0.4)
                 else:
-                    # Calculate distance from collision point
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
                     distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
                     if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth + random.randint(-10,20):
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
+                        # Laser explosion
+                        self.explosions.append(
+                            Explosion(
+                                projectile.rect.center,
+                                sprite_path="z neta/explosion 1.png",  # <-- Corrected path
+                                frame_size=(64, 64),                   # <-- Adjust if your sheet uses a different size
+                                frame_count=16,                        # <-- Adjust if your sheet has a different frame count
+                                frame_duration=0.04
+                            )
+                        )
             projectile.draw(self.screen)
         self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
 
@@ -362,8 +400,8 @@ class GameScreen(ScreenBase):
                 projectile.collision_detected = False
                 projectile.collision_point = None
                 projectile.required_depth = None
-
             if self.enemy.health > 0:
+
                 if not projectile.collision_detected:
                     if projectile.rect.colliderect(self.enemy.rect):
                         projectile.collision_detected = True
@@ -377,8 +415,17 @@ class GameScreen(ScreenBase):
                     if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth:
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
+                        # Rocket explosion
+                        self.explosions.append(Explosion(projectile.rect.center, sprite_path="assets/explosions/explosion 4.png"))
             projectile.draw(self.screen)
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
+
+        # Explosions
+        dt = 1/60
+        for explosion in self.explosions:
+            explosion.update(dt)
+            explosion.draw(self.screen)
+        self.explosions = [e for e in self.explosions if not e.finished]
 
         # Remove all projectiles if waiting for jump
         if self.waiting_for_jump:

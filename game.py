@@ -40,12 +40,12 @@ class Game:
 
             # --- MUZYKA ---
             match self.state:
-                # case "menu":
-                #     if self.current_music != "menu":
-                #         pygame.mixer.music.load("assets/sound/menu_theme.wav")
-                #         pygame.mixer.music.set_volume(0.5)
-                #         pygame.mixer.music.play(-1)
-                #         self.current_music = "menu"
+                case "menu":
+                    if self.current_music != "menu":
+                        pygame.mixer.music.load("assets/sound/menu theme.mp3")
+                        pygame.mixer.music.set_volume(0.4)
+                        pygame.mixer.music.play(-1)
+                        self.current_music = "menu"
 
                 case "intro" | "game":
                     if self.current_music != "game":

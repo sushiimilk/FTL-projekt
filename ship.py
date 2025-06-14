@@ -87,11 +87,6 @@ class EnemyShip(Ship):
         super().__init__(image_path, x, y, max_health, max_shield, scale)
         self.image = self.scaled_image
 
-        self.health = max_health
-        self.max_health = max_health
-        self.shield = max_shield
-        self.max_shield = max_shield
-
     def take_damage(self, amount):
         super().take_damage(amount)
 
