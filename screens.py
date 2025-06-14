@@ -18,7 +18,6 @@ class ScreenBase:
         if event.type == pygame.MOUSEBUTTONDOWN:
             if quit_button.is_hovered():
                 game.running = False
-                pygame.quit()
                 return True
             if menu_button.is_hovered():
                 game.game_screen = GameScreen(game.screen)
@@ -54,7 +53,6 @@ class MenuScreen(ScreenBase):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
                 game.running = False
-                pygame.quit()
                 return
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_hovered():
@@ -120,7 +118,6 @@ class IntroScreen(ScreenBase):
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.running = False
-            pygame.quit()
             return
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.jump_button.is_hovered():
@@ -317,6 +314,7 @@ class GameScreen(ScreenBase):
                 self.ship.take_damage(random.randint(*damage_range))
                 self.sfx_player_hit.play()
                 if self.ship.health <= 0 and not self.player_destroyed_explosion_played:
+                    self.sfx_explosion.play()
                     self.explosions.append(
                         Explosion(
                             self.ship.rect.center,
@@ -418,7 +416,6 @@ class GameScreen(ScreenBase):
 
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.running = False
-            pygame.quit()
             return
 
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -675,7 +672,6 @@ class GameScreen(ScreenBase):
     #     if event.type == pygame.KEYDOWN:
     #         if event.key == pygame.K_ESCAPE:
     #             game.running = False
-    #             pygame.quit()
     #             return
     #
     #     # ---LASER SHOOTING---
