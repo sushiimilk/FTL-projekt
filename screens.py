@@ -1,4 +1,4 @@
-import pygame, random, math
+import random, math
 from ui import *
 from ship import *
 from healthbar import Bar
@@ -170,7 +170,12 @@ class GameScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
 
-        #backgrounds
+        self.cursor = Cursor()
+        self.stage = 1
+        self.waiting_for_jump = False
+        self.enemy_destroyed_explosion_played = False
+
+        # --Backgrounds--
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
             "assets/Backgrounds/bg_blueStarcluster.png",
@@ -181,37 +186,39 @@ class GameScreen(ScreenBase):
             "assets/Backgrounds/low_nebula.png",
         ]
         self.boss_background = "assets/Backgrounds/bg_final.png"
-        self.last_background = None
+        self.background = None
 
-        self.cursor = Cursor()
-
-        #player ship
+        # --Player Ship--
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
-        self.engine_image = pygame.image.load("assets/Kestrel/Kestrel Engine.png").convert_alpha()
-        self.engine_image = pygame.transform.rotate(self.engine_image, 90)  # obrót o 90 stopni w lewo
         self.ship.move(-300, 35)
+
+        # --Engine Animation--
+        self.engine_image = pygame.image.load("assets/Kestrel/Kestrel Engine.png").convert_alpha()
+
+        # --Paski HP/Shield--
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
 
-        # ---BRONIE---
+        # --Guziki--
+        self.jump_button = Button(screen.get_width() // 2 - 47.5, 50, 95, 40, "JUMP", FONTS["medium"])
+        self.laser_button = Button(screen.get_width() // 2 - 59, 600, 118, 40, "LASER", FONTS["medium"])
+        self.rocket_button = Button(screen.get_width() // 2 - 59, 650, 118, 40, "ROCKET", FONTS["medium"])
+
+        # --Bronie--
         self.laser_ready_img = pygame.image.load("assets/Kestrel/Laser ready.png").convert_alpha()
         self.laser_unready_img = pygame.image.load("assets/Kestrel/Laser unready.png").convert_alpha()
         self.rocket_ready_img = pygame.image.load("assets/Kestrel/Rocket ready.png").convert_alpha()
         self.rocket_unready_img = pygame.image.load("assets/Kestrel/Rocket unready.png").convert_alpha()
 
-        #Atak gracza (cooldowny)
+        # --Cooldowny--
         self.laser_attack_cooldown = 1.5        #cooldown lasera (sekundy)
         self.rocket_attack_cooldown = 4.0       #cooldown rakiety
         self.enemy_attack_cooldown = 2.0        #cooldown ataku przeciwnika
         self.last_player_laser_attack = 0      # czas ostatniego ataku laserem
         self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
+        self.last_enemy_attack = 0
 
-        self.stage = 1
-
-        #przerwy miedzy przeciwnikami
-        self.waiting_for_jump = False
-        self.jump_button = Button(screen.get_width()//2-47.5, 50, 95, 40, "JUMP", FONTS["medium"])
-
+        # --Przeciwnicy--
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
             "assets/Mantis/Mantis Fighter.png",
@@ -219,39 +226,127 @@ class GameScreen(ScreenBase):
             "assets/Lanius/Lanius.png",
             "assets/EFighter/Energy Fighter.png"
         ]
-        random.shuffle(self.enemy_ship_paths) 
-
-        
+        random.shuffle(self.enemy_ship_paths)
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.spawn_enemy()
 
-
-        #attak gracza
-        self.laser_button = Button(screen.get_width()//2-59, 600, 118, 40, "LASER", FONTS["medium"])
-        self.rocket_button= Button(screen.get_width()//2-59, 650, 118, 40, "ROCKET", FONTS["medium"])
-
-        # ---PROJECTILES i wybuchy---
+        # --Pociski i wybuchy--
         self.laser_projectiles = []
         self.rocket_projectiles = []
         self.explosions = []
-        self.enemy_destroyed_explosion_played = False
+
+    def is_laser_ready(self):
+        return time.time() - self.last_player_laser_attack >= self.laser_attack_cooldown
+
+    def is_rocket_ready(self):
+        return time.time() - self.last_player_rocket_attack >= self.rocket_attack_cooldown
+
+    def draw(self, game):
+        self.screen.blit(self.background, (0, 0))
+        self.ship.draw(self.screen, centered=self.waiting_for_jump)
+        self.draw_stage_label()
+        self.draw_engine_animation()
+        self.draw_weapons()
+        self.health_bar.update(self.ship.health)
+        self.shield_bar.update(self.ship.shield)
+        self.health_bar.draw(self.screen)
+        self.shield_bar.draw(self.screen)
+        self.draw_enemy()
+        self.enemy_attack(game)
+        self.spawn_enemy_explosion()
+        self.draw_jump_button_or_weapons()
+        self.update_projectile_collisions()
+        self.draw_projectiles()
+        self.draw_explosions()
+        self.cleanup_after_explosions()
+        self.cursor.draw(self.screen)
+
+    def draw_stage_label(self):
+        # STAGE 1,2,3,etc.
+        font = FONTS["large"]
+        stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
+        self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
+
+    def draw_weapons(self):
+        if self.waiting_for_jump:
+            return
+        laser_pos = (390, 328)
+        rocket_pos = (390, 428)
+        self.screen.blit(self.laser_ready_img if self.is_laser_ready() else self.laser_unready_img, laser_pos)
+        self.screen.blit(self.rocket_ready_img if self.is_rocket_ready() else self.rocket_unready_img, rocket_pos)
+
+    def draw_engine_animation(self):
+        if self.waiting_for_jump or self.enemy.health <= 0:
+            return
+        # alpha silnikow w zależności od czasu
+        # 100 to minimalna przezroczystosc, 255 to maksymalna
+        # 135 to amplituda, 0.5 to przesuniecie fazowe
+        # 1 Hz to czstotliwosc, czyli 1 pelny cykl na sekundee
+        alpha = int(100 + 135 * (0.5 + 0.5 * math.sin(2 * math.pi * time.time())))
+        image = self.engine_image.copy()
+        image.set_alpha(alpha)
+        positions = [(114, y) for y in [274, 263, 292, 463, 449, 477]]
+        for pos in positions:
+            self.screen.blit(image, pos)
+
+    def draw_enemy(self):
+        if self.enemy.health > 0:
+            self.enemy.draw(self.screen)
+            self.enemy_health_bar.update(self.enemy.health)
+            self.enemy_shield_bar.update(self.enemy.shield)
+            self.enemy_health_bar.draw(self.screen)
+            self.enemy_shield_bar.draw(self.screen)
 
     def enemy_attack(self, game):
-        now = time.time()
-        #atak przeciwnika
-        if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
-            # atak przeciwnika
-            self.last_enemy_attack = now
-            self.ship.take_damage(random.randint(10, 15))
-            if self.ship.health <= 0:
-                game.state = "death"
+        if not self.waiting_for_jump and self.enemy.health > 0:
+            if time.time() - self.last_enemy_attack >= self.enemy_attack_cooldown:
+                self.last_enemy_attack = time.time()
+                self.ship.take_damage(random.randint(10, 15))
+                if self.ship.health <= 0:
+                    game.state = "death"
+
+    def draw_jump_button_or_weapons(self):
+        if self.waiting_for_jump:
+            self.jump_button.draw(self.screen)
+        else:
+            self.laser_button.draw(self.screen, color=(0, 200, 0) if self.is_laser_ready() else (200, 0, 0))
+            self.rocket_button.draw(self.screen, color=(0, 200, 0) if self.is_rocket_ready() else (200, 0, 0))
+
+    def spawn_enemy_explosion(self):
+        if self.enemy.health <= 0 and not self.enemy_destroyed_explosion_played:
+            self.explosions.append(
+                Explosion(
+                    self.enemy.rect.center,
+                    sprite_path="assets/explosions/explosion 4.png",
+                    frame_size=(512, 512),
+                    frame_count=64
+                )
+            )
+            self.enemy_destroyed_explosion_played = True
+
+    def cleanup_after_explosions(self):
+        if self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and not self.explosions:
+            self.waiting_for_jump = True
+        if self.waiting_for_jump:
+            self.laser_projectiles.clear()
+            self.rocket_projectiles.clear()
+
+    def draw_projectiles(self):
+        pass  # Placeholder for full projectile drawing logic
+
+    def draw_explosions(self):
+        dt = 1 / 60
+        for explosion in self.explosions:
+            explosion.update(dt)
+            explosion.draw(self.screen)
+        self.explosions = [e for e in self.explosions if not e.finished]
 
     def spawn_enemy(self):
         #zmiana tła
         if self.stage < 5:
-            available_backgrounds = [bg for bg in self.background_paths if bg != self.last_background]
+            available_backgrounds = [bg for bg in self.background_paths if bg != self.background]
             chosen_bg = random.choice(available_backgrounds)
-            self.last_background = chosen_bg
+            self.background = chosen_bg
         else:
             chosen_bg = self.boss_background
 
@@ -261,12 +356,8 @@ class GameScreen(ScreenBase):
         )
 
         #Losowanie przeciwnika
-        if self.stage < 5:
-            if self.enemy_ship_paths:
-                enemy_image = self.enemy_ship_paths.pop()
-            else:
-                # Fallback: use the first enemy ship path if list is empty
-                enemy_image = "assets/AutoScout/Auto-Scout.png"
+        if self.stage < 5 and self.enemy_ship_paths:
+            enemy_image = self.enemy_ship_paths.pop()
         else:
             enemy_image = self.boss_ship_path
 
@@ -275,268 +366,78 @@ class GameScreen(ScreenBase):
         self.enemy.move(0, 200)
 
         #Tarcze i hp przeciwnika
-        self.enemy_health_bar = Bar(900, 60, 200, 24,
-                                    self.enemy.max_health, (200, 0, 0),
-                                    "ENEMY HULL")
-
-        self.enemy_shield_bar = Bar(900, 110, 200, 24,
-                                    self.enemy.max_shield, (0, 150, 255),
-                                    "ENEMY SHIELDS")
-        
-        # Ustawienie czasu ostatniego ataku przeciwnika na teraz, aby wymusić cooldown na starcie rundy
+        self.enemy_health_bar = Bar(900, 60, 200, 24, self.enemy.max_health, (200, 0, 0), "ENEMY HULL")
+        self.enemy_shield_bar = Bar(900, 110, 200, 24, self.enemy.max_shield, (0, 150, 255), "ENEMY SHIELDS")
         self.last_enemy_attack = time.time()
-        self.enemy_attack_cooldown = 2.0  # lub inna wartość, jeśli chcesz mieć różne cooldowny
-
-    def is_laser_ready(self):
-        return (time.time() - self.last_player_laser_attack) >= self.laser_attack_cooldown
-
-    def is_rocket_ready(self):
-        return (time.time() - self.last_player_rocket_attack) >= self.rocket_attack_cooldown
-
-    def draw_enemy(self):
-        self.enemy.draw(self.screen)
-        self.enemy_health_bar.update(self.enemy.health)
-        self.enemy_shield_bar.update(self.enemy.shield)
-        self.enemy_health_bar.draw(self.screen)
-        self.enemy_shield_bar.draw(self.screen)
-
-    def draw(self, game):
-        self.screen.blit(self.background, (0, 0))
-        self.ship.draw(self.screen, centered=self.waiting_for_jump)
-
-        # STAGE 1,2,3,etc. 
-        font = FONTS["large"]
-        stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
-        self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
-
-        #animacja silnikow
-        t = time.time()
-        #alpha silnikow w zależności od czasu
-        #100 to minimalna przezroczystosc, 255 to maksymalna
-        #135 to amplituda, 0.5 to przesuniecie fazowe
-        #1 Hz to czstotliwosc, czyli 1 pelny cykl na sekundee
-        engine_alpha = int(100 + 135 * (0.5 + 0.5 * math.sin(2 * math.pi * t * 1)))
-
-        engine_image = self.engine_image.copy()
-        engine_image.set_alpha(engine_alpha)
-
-        # ---POZYCJE BRONI---
-        laser_pos = (390, 328)
-        rocket_pos = (390, 428)
-
-        if not self.waiting_for_jump:
-            if self.is_laser_ready():
-                self.screen.blit(self.laser_ready_img, laser_pos)
-            else:
-                self.screen.blit(self.laser_unready_img, laser_pos)
-            if self.is_rocket_ready():
-                self.screen.blit(self.rocket_ready_img, rocket_pos)
-            else:
-                self.screen.blit(self.rocket_unready_img, rocket_pos)
-
-        if not self.waiting_for_jump and self.enemy.health > 0:
-            #1 silnik gora
-            x = 114
-            y = 274
-            self.screen.blit(engine_image, (x, y))
-            #2 silnik gora
-            x = 114
-            y = 263
-            self.screen.blit(engine_image, (x, y))
-            #3 silnik gora
-            x = 114
-            y = 292
-            self.screen.blit(engine_image, (x, y))
-            #1 silnik dol
-            x = 114
-            y = 449 + 14
-            self.screen.blit(engine_image, (x, y))
-            #2 silnik dol
-            x = 114
-            y = 449
-            self.screen.blit(engine_image, (x, y))
-            #3 silnik dol
-            x = 114
-            y = 449 + 28
-            self.screen.blit(engine_image, (x, y))
-
-        self.health_bar.update(self.ship.health)
-        self.shield_bar.update(self.ship.shield)
-        self.health_bar.draw(self.screen)
-        self.shield_bar.draw(self.screen)
-
-        # ---ENEMY SHIP DRAWING---
-        # Show enemy ship if it's alive or if its explosion is still playing
-        show_enemy = False
-        if self.enemy.health > 0:
-            show_enemy = True
-        elif self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and self.explosions:
-            # Check if any explosion is the enemy explosion (by position and size)
-            for explosion in self.explosions:
-                # The enemy explosion uses frame_size=(512, 512)
-                if explosion.pos == (self.enemy.rect.center[0] - 256, self.enemy.rect.center[1] - 256) and explosion.frames[0].get_size() == (512, 512):
-                    show_enemy = True
-                    break
-
-        if show_enemy:
-            self.draw_enemy()
-
-        #auto atak przeciwnika
-        if not self.waiting_for_jump and self.enemy.health > 0:
-            self.enemy_attack(game)
-
-        # ---ENEMY DESTROYED EXPLOSION---
-        if self.enemy.health <= 0 and not self.waiting_for_jump:
-            if not self.enemy_destroyed_explosion_played:
-                # Wyśrodkowanie wybuchu przeciwnika
-                enemy_center = self.enemy.rect.center
-                self.explosions.append(
-                    Explosion(
-                        enemy_center,
-                        sprite_path="assets/explosions/explosion 4.png",
-                        frame_size=(512, 512),
-                        frame_count=64
-                    )
-                )
-                self.enemy_destroyed_explosion_played = True
-
-        if self.waiting_for_jump:
-            self.jump_button.draw(self.screen)
-        else:
-            # Sprawdź cooldowny
-            laser_color = (0, 200, 0) if self.is_laser_ready() else (200, 0, 0)   # zielony lub czerwony
-            rocket_color = (0, 200, 0) if self.is_rocket_ready() else (200, 0, 0) # zielony lub czerwony
-
-            self.laser_button.draw(self.screen, color=laser_color)      #przycisk laseru
-            self.rocket_button.draw(self.screen, color=rocket_color)    #przycisk rakiety
-
-        # ---PROJECTILES UPDATE, COLLISION & DRAW---
-        # Laser projectiles
-        for projectile in self.laser_projectiles:
-            projectile.update()
-            if not hasattr(projectile, "collision_detected"):
-                projectile.collision_detected = False
-                projectile.collision_point = None
-                projectile.required_depth = None
-            if self.enemy.health > 0:
-                if not projectile.collision_detected:
-                    if projectile.rect.colliderect(self.enemy.rect):
-                        projectile.collision_detected = True
-                        projectile.collision_point = projectile.rect.center
-                        enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10, 100))
-                else:
-                    dx = projectile.rect.centerx - projectile.collision_point[0]
-                    dy = projectile.rect.centery - projectile.collision_point[1]
-                    distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
-                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth + random.randint(-10, 20):
-                        self.enemy.take_damage(projectile.damage)
-                        projectile.active = False
-                        # Laser explosion
-                        self.explosions.append(
-                            Explosion(
-                                projectile.rect.center,
-                                sprite_path="assets/explosions/explosion 1h.png",
-                                frame_size=(256, 256),
-                                frame_count=64,
-                            )
-                        )
-            projectile.draw(self.screen)
-        self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
-
-        # Rocket projectiles
-        for projectile in self.rocket_projectiles:
-            projectile.update()
-            if not hasattr(projectile, "collision_detected"):
-                projectile.collision_detected = False
-                projectile.collision_point = None
-                projectile.required_depth = None
-            if self.enemy.health > 0:
-                if not projectile.collision_detected:
-                    if projectile.rect.colliderect(self.enemy.rect):
-                        projectile.collision_detected = True
-                        projectile.collision_point = projectile.rect.center
-                        enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10, 100))
-                else:
-                    dx = projectile.rect.centerx - projectile.collision_point[0]
-                    dy = projectile.rect.centery - projectile.collision_point[1]
-                    distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
-                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth:
-                        self.enemy.take_damage(projectile.damage)
-                        projectile.active = False
-                        # Rocket explosion
-                        explosion_pos = (projectile.rect.centerx + 90, projectile.rect.centery)
-                        self.explosions.append(
-                            Explosion(
-                                explosion_pos,
-                                sprite_path="assets/explosions/explosion 2h.png",
-                                frame_size=(256, 256),
-                                frame_count=64,
-                            )
-                        )
-            projectile.draw(self.screen)
-        self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
-
-        # Explosions
-        dt = 1/60
-        for explosion in self.explosions:
-            explosion.update(dt)
-            explosion.draw(self.screen)
-        self.explosions = [e for e in self.explosions if not e.finished]
-
-        # Wait for all explosions to finish before allowing jump
-        if self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and not self.explosions and not self.waiting_for_jump:
-            self.waiting_for_jump = True
-
-        # Remove all projectiles if waiting for jump
-        if self.waiting_for_jump:
-            self.laser_projectiles.clear()
-            self.rocket_projectiles.clear()
-
-        self.cursor.draw(self.screen)
+        self.enemy_destroyed_explosion_played = False
 
     def handle_event(self, event, game):
-        if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_ESCAPE:
-                game.running = False
-                pygame.quit()
-                return
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+            game.running = False
+            pygame.quit()
+            return
 
-        # ---LASER SHOOTING---
-        if event.type == pygame.MOUSEBUTTONDOWN and self.laser_button.is_hovered():
-            if self.is_laser_ready():
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.laser_button.is_hovered() and self.is_laser_ready():
                 self.last_player_laser_attack = time.time()
-                # Spawn laser projectile (with damage)
-                laser_gun_x = 390+30
-                laser_gun_y = 328+5
-                dx = 1
-                dy = 0
                 self.laser_projectiles.append(
-                    LaserProjectile(laser_gun_x, laser_gun_y, dx, dy, "assets/Projectiles/laser projectile.png", damage=random.randint(18, 25))
-                )
-        # ---ROCKET SHOOTING---
-        if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
-            if self.is_rocket_ready():
-                self.last_player_rocket_attack = time.time()
-                # Spawn rocket projectile (with damage)
-                rocket_gun_x = 390+40
-                rocket_gun_y = 428+15
-                dx = 1
-                dy = 0
-                self.rocket_projectiles.append(
-                    RocketProjectile(rocket_gun_x, rocket_gun_y, dx, dy, "assets/Projectiles/missile.png", damage=random.randint(24, 35))
+                    LaserProjectile(420, 333, 1, 0, "assets/Projectiles/laser projectile.png", random.randint(18, 25))
                 )
 
-        if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered() and self.waiting_for_jump:
-            self.stage += 1
-            if self.stage <= 5:
-                self.spawn_enemy()
-                self.waiting_for_jump = False
-                self.enemy_destroyed_explosion_played = False
-                self.ship.shield = self.ship.max_shield
-            else:
-                game.state = "victory"
+            if self.rocket_button.is_hovered() and self.is_rocket_ready():
+                self.last_player_rocket_attack = time.time()
+                self.rocket_projectiles.append(
+                    RocketProjectile(430, 443, 1, 0, "assets/Projectiles/missile.png", random.randint(24, 35))
+                )
+
+            if self.jump_button.is_hovered() and self.waiting_for_jump:
+                self.stage += 1
+                if self.stage <= 5:
+                    self.spawn_enemy()
+                    self.waiting_for_jump = False
+                    self.ship.shield = self.ship.max_shield
+                else:
+                    game.state = "victory"
+
+    def update_projectile_collisions(self):
+        def process_projectile(proj_list, is_rocket):
+            for projectile in proj_list:
+                projectile.update()
+                if not hasattr(projectile, "collision_detected"):
+                    projectile.collision_detected = False
+                    projectile.collision_point = None
+                    projectile.required_depth = None
+                if self.enemy.health > 0:
+                    if not projectile.collision_detected:
+                        if projectile.rect.colliderect(self.enemy.rect):
+                            projectile.collision_detected = True
+                            projectile.collision_point = projectile.rect.center
+                            enemy_width = self.enemy.rect.width
+                            projectile.required_depth = int(enemy_width * 0.2) + random.randint(-10, 100)
+                    else:
+                        dx = projectile.rect.centerx - projectile.collision_point[0]
+                        dy = projectile.rect.centery - projectile.collision_point[1]
+                        distance = (dx ** 2 + dy ** 2) ** 0.5
+                        if projectile.required_depth and distance >= projectile.required_depth:
+                            self.enemy.take_damage(projectile.damage)
+                            projectile.active = False
+                            explosion_img = "assets/explosions/explosion 2h.png" if is_rocket else "assets/explosions/explosion 1h.png"
+                            offset_x = 90 if is_rocket else 0
+                            self.explosions.append(
+                                Explosion(
+                                    (projectile.rect.centerx + offset_x, projectile.rect.centery),
+                                    sprite_path=explosion_img,
+                                    frame_size=(256, 256),
+                                    frame_count=64,
+                                )
+                            )
+                projectile.draw(self.screen)
+
+        process_projectile(self.laser_projectiles, is_rocket=False)
+        process_projectile(self.rocket_projectiles, is_rocket=True)
+
+        self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
+        self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
 
 
 class GameOver(ScreenBase):
