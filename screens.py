@@ -175,6 +175,14 @@ class GameScreen(ScreenBase):
         self.waiting_for_jump = False
         self.enemy_destroyed_explosion_played = False
 
+        # --Sound Effects--
+        self.sfx_laser = pygame.mixer.Sound("assets/sound/laser.wav")
+        self.sfx_explosion = pygame.mixer.Sound("assets/sound/rocket_explosion.wav")
+        self.sfx_player_hit = pygame.mixer.Sound("assets/sound/player_damage.wav")
+        self.sfx_laser.set_volume(0.6)
+        self.sfx_explosion.set_volume(0.4)
+        self.sfx_player_hit.set_volume(0.5)
+
         # --Backgrounds--
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
@@ -302,6 +310,7 @@ class GameScreen(ScreenBase):
             if time.time() - self.last_enemy_attack >= self.enemy_attack_cooldown:
                 self.last_enemy_attack = time.time()
                 self.ship.take_damage(random.randint(10, 15))
+                self.sfx_player_hit.play()
                 if self.ship.health <= 0:
                     game.state = "death"
 
@@ -379,6 +388,7 @@ class GameScreen(ScreenBase):
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.laser_button.is_hovered() and self.is_laser_ready():
+                self.sfx_laser.play()
                 self.last_player_laser_attack = time.time()
                 self.laser_projectiles.append(
                     LaserProjectile(420, 333, 1, 0, "assets/Projectiles/laser projectile.png", random.randint(18, 25))
@@ -420,6 +430,7 @@ class GameScreen(ScreenBase):
                         distance = (dx ** 2 + dy ** 2) ** 0.5
                         if projectile.required_depth and distance >= projectile.required_depth:
                             self.enemy.take_damage(projectile.damage)
+                            self.sfx_explosion.play()
                             projectile.active = False
                             explosion_img = "assets/explosions/explosion 2h.png" if is_rocket else "assets/explosions/explosion 1h.png"
                             offset_x = 90 if is_rocket else 0
