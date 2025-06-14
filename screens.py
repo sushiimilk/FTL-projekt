@@ -1,4 +1,4 @@
-import random, math
+import pygame, random, math
 from ui import *
 from ship import *
 from healthbar import Bar
@@ -8,6 +8,31 @@ from projectiles import *
 class ScreenBase:
     def __init__(self, screen):
         self.screen = screen
+
+    @staticmethod
+    # handle_quit_menu_buttons in ScreenBase is a @staticmethod because it
+    # does not use or modify any instance (self) or class (cls) attributes.
+    # It only processes the event and buttons passed as arguments.
+    # Making it static clarifies that it does not depend on the state of a ScreenBase object.
+    def handle_quit_menu_buttons(event, game, quit_button, menu_button):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if quit_button.is_hovered():
+                game.running = False
+                pygame.quit()
+                return True
+            if menu_button.is_hovered():
+                game.game_screen = GameScreen(game.screen)
+                game.intro_screen = IntroScreen(game.screen)
+                game.state = "menu"
+                return True
+        return False
+
+    def draw_quit_menu_buttons(self, text, small_text, quit_button, menu_button, cursor):
+        self.screen.blit(text, ((self.screen.get_width() // 2 - text.get_width() // 2), 220))
+        self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
+        quit_button.draw(self.screen)
+        menu_button.draw(self.screen)
+        cursor.draw(self.screen)
 
 class MenuScreen(ScreenBase):
     def __init__(self, screen):
@@ -30,10 +55,10 @@ class MenuScreen(ScreenBase):
             if event.key == pygame.K_ESCAPE:
                 game.running = False
                 pygame.quit()
+                return
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_hovered():
             game.state = "intro"
-
 
 
 class IntroScreen(ScreenBase):
@@ -70,7 +95,6 @@ class IntroScreen(ScreenBase):
             self.typing_start_time = time.time()
 
     def draw(self, game):
-
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=True)
 
@@ -95,8 +119,9 @@ class IntroScreen(ScreenBase):
 
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                game.running = False
-                pygame.quit()
+            game.running = False
+            pygame.quit()
+            return
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if self.jump_button.is_hovered():
                 game.state = "game"
@@ -144,8 +169,8 @@ class Explosion:
 class GameScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
-        #backgrounds and stuff
 
+        #backgrounds
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
             "assets/Backgrounds/bg_blueStarcluster.png",
@@ -176,12 +201,10 @@ class GameScreen(ScreenBase):
 
         #Atak gracza (cooldowny)
         self.laser_attack_cooldown = 1.5        #cooldown lasera (sekundy)
-        self.rocket_attack_cooldown = 4.0       #cooldown rakiety 
+        self.rocket_attack_cooldown = 4.0       #cooldown rakiety
         self.enemy_attack_cooldown = 2.0        #cooldown ataku przeciwnika
         self.last_player_laser_attack = 0      # czas ostatniego ataku laserem
         self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
-
-        #Enemy ships and stage:
 
         self.stage = 1
 
@@ -219,7 +242,7 @@ class GameScreen(ScreenBase):
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
             # atak przeciwnika
             self.last_enemy_attack = now
-            self.ship.take_damage(random.randint(10,15))
+            self.ship.take_damage(random.randint(10, 15))
             if self.ship.health <= 0:
                 game.state = "death"
 
@@ -241,6 +264,9 @@ class GameScreen(ScreenBase):
         if self.stage < 5:
             if self.enemy_ship_paths:
                 enemy_image = self.enemy_ship_paths.pop()
+            else:
+                # Fallback: use the first enemy ship path if list is empty
+                enemy_image = "assets/AutoScout/Auto-Scout.png"
         else:
             enemy_image = self.boss_ship_path
 
@@ -303,7 +329,6 @@ class GameScreen(ScreenBase):
                 self.screen.blit(self.laser_ready_img, laser_pos)
             else:
                 self.screen.blit(self.laser_unready_img, laser_pos)
-
             if self.is_rocket_ready():
                 self.screen.blit(self.rocket_ready_img, rocket_pos)
             else:
@@ -336,14 +361,24 @@ class GameScreen(ScreenBase):
             self.screen.blit(engine_image, (x, y))
 
         self.health_bar.update(self.ship.health)
-
         self.shield_bar.update(self.ship.shield)
-
         self.health_bar.draw(self.screen)
         self.shield_bar.draw(self.screen)
 
-        #Enemy ship and bars
-        if not self.waiting_for_jump and self.enemy.health > 0:
+        # ---ENEMY SHIP DRAWING---
+        # Show enemy ship if it's alive or if its explosion is still playing
+        show_enemy = False
+        if self.enemy.health > 0:
+            show_enemy = True
+        elif self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and self.explosions:
+            # Check if any explosion is the enemy explosion (by position and size)
+            for explosion in self.explosions:
+                # The enemy explosion uses frame_size=(512, 512)
+                if explosion.pos == (self.enemy.rect.center[0] - 256, self.enemy.rect.center[1] - 256) and explosion.frames[0].get_size() == (512, 512):
+                    show_enemy = True
+                    break
+
+        if show_enemy:
             self.draw_enemy()
 
         #auto atak przeciwnika
@@ -353,7 +388,7 @@ class GameScreen(ScreenBase):
         # ---ENEMY DESTROYED EXPLOSION---
         if self.enemy.health <= 0 and not self.waiting_for_jump:
             if not self.enemy_destroyed_explosion_played:
-                # Center explosion on enemy ship
+                # Wyśrodkowanie wybuchu przeciwnika
                 enemy_center = self.enemy.rect.center
                 self.explosions.append(
                     Explosion(
@@ -365,13 +400,10 @@ class GameScreen(ScreenBase):
                 )
                 self.enemy_destroyed_explosion_played = True
 
-
-
         if self.waiting_for_jump:
             self.jump_button.draw(self.screen)
         else:
             # Sprawdź cooldowny
-            now = time.time()
             laser_color = (0, 200, 0) if self.is_laser_ready() else (200, 0, 0)   # zielony lub czerwony
             rocket_color = (0, 200, 0) if self.is_rocket_ready() else (200, 0, 0) # zielony lub czerwony
 
@@ -392,12 +424,12 @@ class GameScreen(ScreenBase):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
                         enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10,100))
+                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10, 100))
                 else:
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
                     distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
-                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth + random.randint(-10,20):
+                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth + random.randint(-10, 20):
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
                         # Laser explosion
@@ -425,7 +457,7 @@ class GameScreen(ScreenBase):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
                         enemy_width = self.enemy.rect.width
-                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10,100))
+                        projectile.required_depth = int(enemy_width * 0.2 + random.randint(-10, 100))
                 else:
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
@@ -469,23 +501,22 @@ class GameScreen(ScreenBase):
             if event.key == pygame.K_ESCAPE:
                 game.running = False
                 pygame.quit()
+                return
 
         # ---LASER SHOOTING---
         if event.type == pygame.MOUSEBUTTONDOWN and self.laser_button.is_hovered():
-            now = time.time()
             if self.is_laser_ready():
                 self.last_player_laser_attack = time.time()
                 # Spawn laser projectile (with damage)
                 laser_gun_x = 390+30
                 laser_gun_y = 328+5
-                dx = 1  # rightwards
+                dx = 1
                 dy = 0
                 self.laser_projectiles.append(
                     LaserProjectile(laser_gun_x, laser_gun_y, dx, dy, "assets/Projectiles/laser projectile.png", damage=random.randint(18, 25))
                 )
         # ---ROCKET SHOOTING---
         if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
-            now = time.time()
             if self.is_rocket_ready():
                 self.last_player_rocket_attack = time.time()
                 # Spawn rocket projectile (with damage)
@@ -502,11 +533,10 @@ class GameScreen(ScreenBase):
             if self.stage <= 5:
                 self.spawn_enemy()
                 self.waiting_for_jump = False
-                self.enemy_destroyed_explosion_played = False  # Reset for next enemy
+                self.enemy_destroyed_explosion_played = False
                 self.ship.shield = self.ship.max_shield
             else:
                 game.state = "victory"
-
 
 
 class GameOver(ScreenBase):
@@ -519,25 +549,16 @@ class GameOver(ScreenBase):
         self.menu_button = Button((screen.get_width()//2 - 117), 450, 234, 50, "MAIN MENU", self.font)
 
     def draw(self):
+        if not pygame.display.get_init():
+            return
         self.screen.fill((0, 0, 0))
         text = self.font.render("MISSION FAILED", True, (255, 0, 0))
         small_text = self.smaller_font.render("we'll get 'em next time...", True, (255, 0, 0))
-        self.screen.blit(text, ((self.screen.get_width()//2 - text.get_width() // 2),220))
-        self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
-        self.quit_button.draw(self.screen)
-        self.menu_button.draw(self.screen)
-        self.cursor.draw(self.screen)
+        self.draw_quit_menu_buttons(text, small_text, self.quit_button, self.menu_button, self.cursor)
 
     def handle_event(self, event, game):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-                if self.quit_button.is_hovered():
-                    game.running = False
-                    pygame.quit()
-                    return
-                if self.menu_button.is_hovered():
-                    game.game_screen = GameScreen(game.screen)
-                    game.intro_screen = IntroScreen(game.screen)
-                    game.state = "menu"
+        if self.handle_quit_menu_buttons(event, game, self.quit_button, self.menu_button):
+            return
 
 class Victory(ScreenBase):
     def __init__(self, screen):
@@ -549,22 +570,13 @@ class Victory(ScreenBase):
         self.menu_button = Button((screen.get_width() // 2 - 117), 450, 234, 50, "MAIN MENU", self.font)
 
     def draw(self):
+        if not pygame.display.get_init():
+            return
         self.screen.fill((0, 0, 0))
         text = self.font.render("MISSION SUCCESS", True, (0, 255, 0))
         small_text = self.smaller_font.render("you made it back home!", True, (0, 255, 0))
-        self.screen.blit(text, ((self.screen.get_width() // 2 - text.get_width() // 2), 220))
-        self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
-        self.quit_button.draw(self.screen)
-        self.menu_button.draw(self.screen)
-        self.cursor.draw(self.screen)
+        self.draw_quit_menu_buttons(text, small_text, self.quit_button, self.menu_button, self.cursor)
 
     def handle_event(self, event, game):
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            if self.quit_button.is_hovered():
-                game.running = False
-                pygame.quit()
-                return
-            if self.menu_button.is_hovered():
-                game.game_screen = GameScreen(game.screen)
-                game.intro_screen = IntroScreen(game.screen)
-                game.state = "menu"
+        if self.handle_quit_menu_buttons(event, game, self.quit_button, self.menu_button):
+            return
