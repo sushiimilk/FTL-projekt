@@ -3,6 +3,7 @@ from ui import Button, Cursor
 from ship import Ship, EnemyShip
 from healthbar import Bar
 from fonts import FONTS
+import time
 
 class ScreenBase:
     def __init__(self, screen):
@@ -148,7 +149,9 @@ class GameScreen(ScreenBase):
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
             "assets/Mantis/Mantis Fighter.png",
-            "assets/RFighter/Rebel Fighter.png"
+            "assets/RFighter/Rebel Fighter.png",
+            "assets/Lanius/Lanius.png",
+            "assets/EFighter/Energy Fighter.png"
         ]
         random.shuffle(self.enemy_ship_paths) 
 
@@ -165,14 +168,16 @@ class GameScreen(ScreenBase):
         now = time.time()
         #atak przeciwnika
         if now - self.last_enemy_attack >= self.enemy_attack_cooldown:
+            # atak przeciwnika
             self.last_enemy_attack = now
             self.ship.take_damage(random.randint(10,15))  
+            print(f"Gracz otrzymał atak od przeciwnika! Czas: {time.time()}")
             if self.ship.health <= 0:
                 game.state = "death"
 
     def spawn_enemy(self):
         #zmiana tła
-        if self.stage < 3:
+        if self.stage < 5:
             available_backgrounds = [bg for bg in self.background_paths if bg != self.last_background]
             chosen_bg = random.choice(available_backgrounds)
             self.last_background = chosen_bg
@@ -185,7 +190,7 @@ class GameScreen(ScreenBase):
         )
 
         #Losowanie przeciwnika
-        if self.stage < 3:
+        if self.stage < 5:
             if self.enemy_ship_paths:
                 enemy_image = self.enemy_ship_paths.pop()
         else:
@@ -203,6 +208,10 @@ class GameScreen(ScreenBase):
         self.enemy_shield_bar = Bar(900, 110, 200, 24,
                                     self.enemy.max_shield, (0, 150, 255),
                                     "ENEMY SHIELDS")
+        
+        # Ustawienie czasu ostatniego ataku przeciwnika na teraz, aby wymusić cooldown na starcie rundy
+        self.last_enemy_attack = time.time()
+        self.enemy_attack_cooldown = 2.0  # lub inna wartość, jeśli chcesz mieć różne cooldowny
 
     def is_laser_ready(self):
         return (time.time() - self.last_player_laser_attack) >= self.laser_attack_cooldown
@@ -224,8 +233,6 @@ class GameScreen(ScreenBase):
         font = FONTS["large"]
         stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
         self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
-
-        self.ship.draw(self.screen, centered=self.waiting_for_jump)
 
         #animacja silnikow
         t = time.time()
@@ -316,7 +323,7 @@ class GameScreen(ScreenBase):
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered() and self.waiting_for_jump:
             self.stage += 1
-            if self.stage <= 3:
+            if self.stage <= 5:
                 self.spawn_enemy()
                 self.waiting_for_jump = False
             else:
