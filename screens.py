@@ -1,9 +1,9 @@
 import pygame, random, time, math
-from ui import Button, Cursor
-from ship import Ship, EnemyShip
+from ui import *
+from ship import *
 from healthbar import Bar
 from fonts import FONTS
-from projectiles import LaserProjectile, RocketProjectile
+from projectiles import *
 
 class ScreenBase:
     def __init__(self, screen):
@@ -334,18 +334,22 @@ class GameScreen(ScreenBase):
             if not hasattr(projectile, "collision_detected"):
                 projectile.collision_detected = False
                 projectile.collision_point = None
+                projectile.required_depth = None
 
             if self.enemy.health > 0:
                 if not projectile.collision_detected:
                     if projectile.rect.colliderect(self.enemy.rect):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
+                        # Set required depth as a fraction of enemy image width (e.g., 40%)
+                        enemy_width = self.enemy.rect.width
+                        projectile.required_depth = int(enemy_width * 0.5)
                 else:
                     # Calculate distance from collision point
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
                     distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
-                    if distance_after_collision >= random.randint(40,200):
+                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth + random.randint(-10,20):
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
             projectile.draw(self.screen)
@@ -357,17 +361,20 @@ class GameScreen(ScreenBase):
             if not hasattr(projectile, "collision_detected"):
                 projectile.collision_detected = False
                 projectile.collision_point = None
+                projectile.required_depth = None
 
             if self.enemy.health > 0:
                 if not projectile.collision_detected:
                     if projectile.rect.colliderect(self.enemy.rect):
                         projectile.collision_detected = True
                         projectile.collision_point = projectile.rect.center
+                        enemy_width = self.enemy.rect.width
+                        projectile.required_depth = int(enemy_width * 0.4)
                 else:
                     dx = projectile.rect.centerx - projectile.collision_point[0]
                     dy = projectile.rect.centery - projectile.collision_point[1]
                     distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
-                    if distance_after_collision >= 50:
+                    if projectile.required_depth is not None and distance_after_collision >= projectile.required_depth:
                         self.enemy.take_damage(projectile.damage)
                         projectile.active = False
             projectile.draw(self.screen)
