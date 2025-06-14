@@ -150,7 +150,7 @@ class GameScreen(ScreenBase):
 
         #przerwy miedzy przeciwnikami
         self.waiting_for_jump = False
-        self.jump_button = Button(screen.get_width()//2-47.5, 40, 95, 40, "JUMP", FONTS["small"])
+        self.jump_button = Button(screen.get_width()//2-47.5, 50, 95, 40, "JUMP", FONTS["medium"])
 
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
@@ -311,6 +311,10 @@ class GameScreen(ScreenBase):
         if not self.waiting_for_jump and self.enemy.health > 0:
             self.enemy_attack(game)
 
+        if self.enemy.health <= 0 and not self.waiting_for_jump:
+            self.waiting_for_jump = True
+            self.ship.shield = self.ship.max_shield
+
         if self.waiting_for_jump:
             self.jump_button.draw(self.screen)
         else:
@@ -322,19 +326,57 @@ class GameScreen(ScreenBase):
             self.laser_button.draw(self.screen, color=laser_color) #przycisk laseru
             self.rocket_button.draw(self.screen, color=rocket_color) #przycisk rakiety
 
-        # ---PROJECTILES UPDATE & DRAW---
+        # ---PROJECTILES UPDATE, COLLISION & DRAW---
         # Laser projectiles
         for projectile in self.laser_projectiles:
             projectile.update()
+            # Initialize tracking attributes if not present
+            if not hasattr(projectile, "collision_detected"):
+                projectile.collision_detected = False
+                projectile.collision_point = None
+
+            if self.enemy.health > 0:
+                if not projectile.collision_detected:
+                    if projectile.rect.colliderect(self.enemy.rect):
+                        projectile.collision_detected = True
+                        projectile.collision_point = projectile.rect.center
+                else:
+                    # Calculate distance from collision point
+                    dx = projectile.rect.centerx - projectile.collision_point[0]
+                    dy = projectile.rect.centery - projectile.collision_point[1]
+                    distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
+                    if distance_after_collision >= random.randint(40,200):
+                        self.enemy.take_damage(projectile.damage)
+                        projectile.active = False
             projectile.draw(self.screen)
-        # Remove inactive
         self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
 
         # Rocket projectiles
         for projectile in self.rocket_projectiles:
             projectile.update()
+            if not hasattr(projectile, "collision_detected"):
+                projectile.collision_detected = False
+                projectile.collision_point = None
+
+            if self.enemy.health > 0:
+                if not projectile.collision_detected:
+                    if projectile.rect.colliderect(self.enemy.rect):
+                        projectile.collision_detected = True
+                        projectile.collision_point = projectile.rect.center
+                else:
+                    dx = projectile.rect.centerx - projectile.collision_point[0]
+                    dy = projectile.rect.centery - projectile.collision_point[1]
+                    distance_after_collision = (dx ** 2 + dy ** 2) ** 0.5
+                    if distance_after_collision >= 50:
+                        self.enemy.take_damage(projectile.damage)
+                        projectile.active = False
             projectile.draw(self.screen)
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
+
+        # Remove all projectiles if waiting for jump
+        if self.waiting_for_jump:
+            self.laser_projectiles.clear()
+            self.rocket_projectiles.clear()
 
         self.cursor.draw(self.screen)
 
@@ -349,35 +391,27 @@ class GameScreen(ScreenBase):
             now = time.time()
             if self.is_laser_ready():
                 self.last_player_laser_attack = time.time()
-                self.enemy.take_damage(random.randint(18, 25))
-                # Spawn laser projectile
-                # Laser gun position (barrel): adjust as needed
+                # Spawn laser projectile (with damage)
                 laser_gun_x = 390+30
                 laser_gun_y = 328+5
                 dx = 1  # rightwards
                 dy = 0
                 self.laser_projectiles.append(
-                    LaserProjectile(laser_gun_x, laser_gun_y, dx, dy, "assets/Projectiles/laser projectile.png", damage=0)
+                    LaserProjectile(laser_gun_x, laser_gun_y, dx, dy, "assets/Projectiles/laser projectile.png", damage=random.randint(18, 25))
                 )
         # ---ROCKET SHOOTING---
         if event.type == pygame.MOUSEBUTTONDOWN and self.rocket_button.is_hovered():
             now = time.time()
             if self.is_rocket_ready():
                 self.last_player_rocket_attack = time.time()
-                self.enemy.take_damage(random.randint(24, 35))
-                # Spawn rocket projectile
+                # Spawn rocket projectile (with damage)
                 rocket_gun_x = 390+40
                 rocket_gun_y = 428+15
                 dx = 1
                 dy = 0
                 self.rocket_projectiles.append(
-                    RocketProjectile(rocket_gun_x, rocket_gun_y, dx, dy, "assets/Projectiles/missile.png", damage=0)
+                    RocketProjectile(rocket_gun_x, rocket_gun_y, dx, dy, "assets/Projectiles/missile.png", damage=random.randint(24, 35))
                 )
-
-
-        if self.enemy.health <= 0 and not self.waiting_for_jump:
-            self.waiting_for_jump = True
-            self.ship.shield = self.ship.max_shield
 
         if event.type == pygame.MOUSEBUTTONDOWN and self.jump_button.is_hovered() and self.waiting_for_jump:
             self.stage += 1

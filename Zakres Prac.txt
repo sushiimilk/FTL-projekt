@@ -32,9 +32,10 @@ Szymon Rogowski
 
 
 Do zrobienia
--remove player attack logic replace with projectile damage
-poprawic strzelania i usuwanie pociskow
-strzelanie od przeciwnikow
+- remove player attack logic replace with projectile damage
+- poprawic strzelania i usuwanie pociskow
+- strzelanie od przeciwnikow
+- atak przeciwnika spod srodka
 
 
 - dziedziczenie super()
