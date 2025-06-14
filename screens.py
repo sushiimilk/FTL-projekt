@@ -200,6 +200,7 @@ class GameScreen(ScreenBase):
         # --Player Ship--
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
         self.ship.move(-300, 35)
+        self.player_destroyed_explosion_played = False
 
         # --Engine Animation--
         self.engine_image = pygame.image.load("assets/Kestrel/Kestrel Engine.png").convert_alpha()
@@ -266,7 +267,7 @@ class GameScreen(ScreenBase):
         self.update_projectile_collisions(game)
         self.draw_projectiles()
         self.draw_explosions()
-        self.cleanup_after_explosions()
+        self.cleanup_after_explosions(game)
         self.cursor.draw(self.screen)
 
     def draw_stage_label(self):
@@ -309,14 +310,22 @@ class GameScreen(ScreenBase):
             self.screen.blit(variant_text, (self.screen.get_width() // 2 - variant_text.get_width() // 2, 50))
 
     def enemy_attack(self, game):
-        if not self.waiting_for_jump and self.enemy.health > 0:
+        if not self.waiting_for_jump and self.enemy.health > 0 and self.ship.health > 0:
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
                 damage_range = self.enemy.variant["damage"]
                 self.ship.take_damage(random.randint(*damage_range))
                 self.sfx_player_hit.play()
-                if self.ship.health <= 0:
-                    game.state = "death"
+                if self.ship.health <= 0 and not self.player_destroyed_explosion_played:
+                    self.explosions.append(
+                        Explosion(
+                            self.ship.rect.center,
+                            sprite_path="assets/explosions/explosion 4.png",
+                            frame_size=(512, 512),
+                            frame_count=64
+                        )
+                    )
+                    self.player_destroyed_explosion_played = True
 
     def draw_jump_button_or_weapons(self):
         if self.waiting_for_jump:
@@ -337,7 +346,9 @@ class GameScreen(ScreenBase):
             )
             self.enemy_destroyed_explosion_played = True
 
-    def cleanup_after_explosions(self):
+    def cleanup_after_explosions(self, game):
+        if self.ship.health <= 0 and self.player_destroyed_explosion_played and not self.explosions:
+            game.state = "death"
         if self.enemy.health <= 0 and self.enemy_destroyed_explosion_played and not self.explosions:
             self.waiting_for_jump = True
         if self.waiting_for_jump:
@@ -402,6 +413,9 @@ class GameScreen(ScreenBase):
         self.enemy_destroyed_explosion_played = False
 
     def handle_event(self, event, game):
+        if self.ship.health <= 0:
+            return
+
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.running = False
             pygame.quit()
