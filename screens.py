@@ -240,6 +240,8 @@ class GameScreen(ScreenBase):
         self.laser_projectiles = []
         self.rocket_projectiles = []
         self.explosions = []
+        # Dodaj listę pocisków przeciwnika
+        self.enemy_projectiles = []
 
     def is_laser_ready(self):
         return time.time() - self.last_player_laser_attack >= self.laser_attack_cooldown
@@ -310,9 +312,21 @@ class GameScreen(ScreenBase):
         if not self.waiting_for_jump and self.enemy.health > 0 and self.ship.health > 0:
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
+                # Zamiast bezpośredniego zadawania obrażeń, twórz pocisk
                 damage_range = self.enemy.variant["damage"]
-                self.ship.take_damage(random.randint(*damage_range))
-                self.sfx_player_hit.play()
+                damage = random.randint(*damage_range)
+                # Dodaj pocisk przeciwnika (przykład: EnemyProjectile)
+                self.enemy_projectiles.append(
+                    EnemyProjectile(
+                        self.enemy.rect.centerx - 50,  # start x (przeciwnik)
+                        self.enemy.rect.centery,
+                        -1, 0,  # kierunek w lewo
+                        "assets/Projectiles/laser projectile.png",
+                        damage
+                    )
+                )
+                # Odtwarzaj dźwięk ataku przeciwnika (opcjonalnie)
+                # self.sfx_enemy_attack.play()
                 if self.ship.health <= 0 and not self.player_destroyed_explosion_played:
                     self.sfx_explosion.play()
                     self.explosions.append(
@@ -357,7 +371,12 @@ class GameScreen(ScreenBase):
             self.sfx_player_hit.stop()
 
     def draw_projectiles(self):
-        pass  # Placeholder for full projectile drawing logic
+        # Rysuj pociski gracza (jeśli są)
+        for projectile in self.laser_projectiles + self.rocket_projectiles:
+            projectile.draw(self.screen)
+        # Rysuj pociski przeciwnika
+        for projectile in self.enemy_projectiles:
+            projectile.draw(self.screen)
 
     def draw_explosions(self):
         dt = 1 / 60
@@ -484,6 +503,29 @@ class GameScreen(ScreenBase):
         self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
 
+        # Dodaj obsługę pocisków przeciwnika
+        for projectile in self.enemy_projectiles:
+            projectile.update()
+            if not hasattr(projectile, "collision_detected"):
+                projectile.collision_detected = False
+            if self.ship.health > 0 and not projectile.collision_detected:
+                if projectile.rect.colliderect(self.ship.rect):
+                    projectile.collision_detected = True
+                    self.ship.take_damage(projectile.damage)
+                    self.sfx_player_hit.play()
+                    projectile.active = False
+                    # Dodaj wybuch na statku gracza (opcjonalnie)
+                    self.explosions.append(
+                        Explosion(
+                            projectile.rect.center,
+                            sprite_path="assets/explosions/explosion 1h.png",
+                            frame_size=(256, 256),
+                            frame_count=64,
+                        )
+                    )
+            projectile.draw(self.screen)
+        self.enemy_projectiles = [p for p in self.enemy_projectiles if p.active]
+
 class GameOver(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
@@ -532,3 +574,24 @@ class Victory(ScreenBase):
     def handle_event(self, event, game):
         if self.handle_quit_menu_buttons(event, game, self.quit_button, self.menu_button):
             return
+
+# Dodaj prostą klasę pocisku przeciwnika na końcu pliku (lub w osobnym pliku jeśli wolisz)
+class EnemyProjectile:
+    def __init__(self, x, y, dx, dy, image_path, damage):
+        self.image = pygame.image.load(image_path).convert_alpha()
+        self.rect = self.image.get_rect(center=(x, y))
+        self.dx = dx * 8  # prędkość pocisku
+        self.dy = dy * 8
+        self.damage = damage
+        self.active = True
+
+    def update(self):
+        self.rect.x += self.dx
+        self.rect.y += self.dy
+        # Dezaktywuj jeśli poza ekranem
+        if self.rect.right < 0 or self.rect.left > 1600:
+            self.active = False
+
+    def draw(self, surface):
+        if self.active:
+            surface.blit(self.image, self.rect)

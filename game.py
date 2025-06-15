@@ -10,7 +10,7 @@ class Game:
         # --Stat tracking--
         self.total_damage_dealt = 0
         self.start_time = None
-        self.victory_time = None  # ✅ Add this
+        self.victory_time = None
 
         self.screen = pygame.display.set_mode((1200, 700))
         pygame.display.set_caption("FTL Clone")
