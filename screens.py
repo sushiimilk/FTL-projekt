@@ -404,7 +404,7 @@ class GameScreen(ScreenBase):
             "standard": {"hp": 100, "shield": 50, "damage": (10, 15), "cooldown": 2.0},
             "heavy": {"hp": 175, "shield": 75, "damage": (18, 25), "cooldown": 2.5},
             "shielded": {"hp": 90, "shield": 125, "damage": (10, 15), "cooldown": 2.0},
-            "superheavy": {"hp": 300, "shield": 150, "damage": (20, 30), "cooldown": 3.5}
+            "superheavy": {"hp": 300, "shield": 150, "damage": (17, 30), "cooldown": 3.5}
         }
 
         #Losowanie przeciwnika
