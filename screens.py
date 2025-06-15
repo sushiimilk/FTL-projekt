@@ -238,6 +238,7 @@ class GameScreen(ScreenBase):
 
         # --Pociski i wybuchy--
         self.laser_projectiles = []
+        self.enemy_projectiles = []
         self.rocket_projectiles = []
         self.explosions = []
 
@@ -257,12 +258,12 @@ class GameScreen(ScreenBase):
         self.shield_bar.update(self.ship.shield)
         self.health_bar.draw(self.screen)
         self.shield_bar.draw(self.screen)
+        self.draw_projectiles()
         self.draw_enemy()
         self.enemy_attack(game)
         self.spawn_enemy_explosion()
         self.draw_jump_button_or_weapons()
         self.update_projectile_collisions(game)
-        self.draw_projectiles()
         self.draw_explosions()
         self.cleanup_after_explosions(game)
         self.cursor.draw(self.screen)
@@ -311,19 +312,16 @@ class GameScreen(ScreenBase):
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
                 damage_range = self.enemy.variant["damage"]
-                self.ship.take_damage(random.randint(*damage_range))
-                self.sfx_player_hit.play()
-                if self.ship.health <= 0 and not self.player_destroyed_explosion_played:
-                    self.sfx_explosion.play()
-                    self.explosions.append(
-                        Explosion(
-                            self.ship.rect.center,
-                            sprite_path="assets/explosions/explosion 4.png",
-                            frame_size=(512, 512),
-                            frame_count=64
-                        )
-                    )
-                    self.player_destroyed_explosion_played = True
+                damage = random.randint(*damage_range)
+                projectile = LaserProjectile(
+                    x=self.enemy.rect.left+30,
+                    y=self.enemy.rect.centery,
+                    dx=-1,
+                    dy=0,
+                    image_path="assets/Projectiles/enemy laser.png",
+                    damage=damage
+                )
+                self.enemy_projectiles.append(projectile)
 
     def draw_jump_button_or_weapons(self):
         if self.waiting_for_jump:
@@ -357,7 +355,27 @@ class GameScreen(ScreenBase):
             self.sfx_player_hit.stop()
 
     def draw_projectiles(self):
-        pass  # Placeholder for full projectile drawing logic
+        for projectile in self.enemy_projectiles:
+            projectile.update()
+            projectile.draw(self.screen)
+            if projectile.rect.colliderect(self.ship.rect):
+                self.ship.take_damage(projectile.damage)
+                self.sfx_player_hit.play()
+                projectile.active = False
+
+        if self.ship.health <= 0 and not self.player_destroyed_explosion_played:
+            self.sfx_explosion.play()
+            self.explosions.append(
+                Explosion(
+                    self.ship.rect.center,
+                    sprite_path="assets/explosions/explosion 4.png",
+                    frame_size=(512, 512),
+                    frame_count=64
+                )
+            )
+            self.player_destroyed_explosion_played = True
+
+        self.enemy_projectiles = [p for p in self.enemy_projectiles if p.active]
 
     def draw_explosions(self):
         dt = 1 / 60
