@@ -400,19 +400,22 @@ class GameScreen(ScreenBase):
 
         # --Wariancje--
         self.enemy_variants = {
-            "fast": {"hp": 80, "shield": 30, "damage": (8, 12), "cooldown": 1},
+            "fast": {"hp": 80, "shield": 30, "damage": (8, 15), "cooldown": 1},
             "standard": {"hp": 100, "shield": 50, "damage": (10, 15), "cooldown": 2.0},
-            "heavy": {"hp": 175, "shield": 75, "damage": (14, 20), "cooldown": 2.5},
-            "shielded": {"hp": 90, "shield": 100, "damage": (10, 15), "cooldown": 2.0},
+            "heavy": {"hp": 175, "shield": 75, "damage": (18, 25), "cooldown": 2.5},
+            "shielded": {"hp": 90, "shield": 125, "damage": (10, 15), "cooldown": 2.0},
+            "superheavy": {"hp": 300, "shield": 150, "damage": (20, 30), "cooldown": 3.5}
         }
-        variant_key = random.choice(list(self.enemy_variants.keys()))
-        variant = self.enemy_variants[variant_key]
 
         #Losowanie przeciwnika
         if self.stage < 5 and self.enemy_ship_paths:
             enemy_image = self.enemy_ship_paths.pop()
+            variant_key = random.choice(list(self.enemy_variants.keys() - {"superheavy"}))  # Exclude boss class
         else:
             enemy_image = self.boss_ship_path
+            variant_key = "superheavy"
+
+        variant = self.enemy_variants[variant_key]
 
         #Rysowanie przeciwnika
         self.enemy = EnemyShip(enemy_image, x=900, y=200,
@@ -441,13 +444,13 @@ class GameScreen(ScreenBase):
                 self.sfx_laser.play()
                 self.last_player_laser_attack = time.time()
                 self.laser_projectiles.append(
-                    LaserProjectile(420, 333, 1, 0, "assets/Projectiles/laser projectile.png", random.randint(18, 25))
+                    LaserProjectile(420, 333, 1, 0, "assets/Projectiles/laser projectile.png", random.randint(20, 26))
                 )
 
             if self.rocket_button.is_hovered() and self.is_rocket_ready():
                 self.last_player_rocket_attack = time.time()
                 self.rocket_projectiles.append(
-                    RocketProjectile(430, 443, 1, 0, "assets/Projectiles/missile.png", random.randint(24, 35))
+                    RocketProjectile(430, 443, 1, 0, "assets/Projectiles/missile.png", random.randint(26, 39))
                 )
 
             if self.jump_button.is_hovered() and self.waiting_for_jump:
