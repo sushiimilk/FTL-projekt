@@ -92,7 +92,7 @@ class IntroScreen(ScreenBase):
         if self.typing_start_time is None:
             self.typing_start_time = time.time()
 
-    def draw(self, game):
+    def draw(self):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=True)
 
@@ -167,7 +167,6 @@ class Explosion:
 class GameScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
-
         self.cursor = Cursor()
         self.stage = 1
         self.waiting_for_jump = False
@@ -234,6 +233,10 @@ class GameScreen(ScreenBase):
         ]
         random.shuffle(self.enemy_ship_paths)
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
+        self.enemy_variants = None
+        self.enemy = None
+        self.enemy_health_bar = None
+        self.enemy_shield_bar = None
         self.spawn_enemy()
 
         # --Pociski i wybuchy--
@@ -260,7 +263,7 @@ class GameScreen(ScreenBase):
         self.shield_bar.draw(self.screen)
         self.draw_projectiles()
         self.draw_enemy()
-        self.enemy_attack(game)
+        self.enemy_attack()
         self.spawn_enemy_explosion()
         self.draw_jump_button_or_weapons()
         self.update_projectile_collisions(game)
@@ -288,7 +291,7 @@ class GameScreen(ScreenBase):
         # alpha silnikow w zależności od czasu
         # 100 to minimalna przezroczystosc, 255 to maksymalna
         # 135 to amplituda, 0.5 to przesuniecie fazowe
-        # 1 Hz to czstotliwosc, czyli 1 pelny cykl na sekundee
+        # 1 Hz to czestotliwosc, czyli 1 pelny cykl na sekunde
         alpha = int(100 + 135 * (0.5 + 0.5 * math.sin(2 * math.pi * time.time())))
         image = self.engine_image.copy()
         image.set_alpha(alpha)
@@ -307,7 +310,7 @@ class GameScreen(ScreenBase):
             variant_text = FONTS["small"].render(f"{variant_key.upper()} ENEMY", True, (255, 255, 255))
             self.screen.blit(variant_text, (self.screen.get_width() // 2 - variant_text.get_width() // 2, 50))
 
-    def enemy_attack(self, game):
+    def enemy_attack(self):
         if not self.waiting_for_jump and self.enemy.health > 0 and self.ship.health > 0:
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
@@ -402,9 +405,9 @@ class GameScreen(ScreenBase):
         self.enemy_variants = {
             "fast": {"hp": 80, "shield": 30, "damage": (8, 15), "cooldown": 1},
             "standard": {"hp": 100, "shield": 50, "damage": (10, 15), "cooldown": 2.0},
-            "heavy": {"hp": 175, "shield": 75, "damage": (18, 25), "cooldown": 2.5},
+            "heavy": {"hp": 175, "shield": 75, "damage": (17, 24), "cooldown": 2.7},
             "shielded": {"hp": 90, "shield": 125, "damage": (10, 15), "cooldown": 2.0},
-            "superheavy": {"hp": 300, "shield": 150, "damage": (17, 30), "cooldown": 3.5}
+            "superheavy": {"hp": 250, "shield": 150, "damage": (17, 30), "cooldown": 3.5}
         }
 
         #Losowanie przeciwnika

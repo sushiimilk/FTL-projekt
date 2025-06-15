@@ -77,7 +77,7 @@ class Game:
                 case "menu":
                     self.menu_screen.draw()
                 case "intro":
-                    self.intro_screen.draw(self)
+                    self.intro_screen.draw()
                 case "game":
                     self.game_screen.draw(self)
                 case "death":
