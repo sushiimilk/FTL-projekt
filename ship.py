@@ -9,9 +9,6 @@ class Ship:
 
         #combat rozmiar
         self.scaled_image = pygame.transform.smoothscale(original, (int(w * scale), int(h * scale)))
-
-        self.image = original
-
         self.rect = self.scaled_image.get_rect(center=(x, y))
 
         self.shield_fade_alpha = 255
@@ -82,7 +79,7 @@ class EnemyShip(Ship):
 
         original = pygame.image.load(image_path).convert_alpha()
         ow, oh = original.get_size()
-        max_width, max_height = 400, 500
+        max_width, max_height = 1500, 500
 
         scale_x = max_width / ow
         scale_y = max_height / oh
