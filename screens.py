@@ -5,10 +5,13 @@ from healthbar import Bar
 from fonts import FONTS
 from projectiles import *
 
+
+#klasa bazowa dla ekranów
 class ScreenBase:
     def __init__(self, screen):
         self.screen = screen
 
+    #oblusga przycisków quit i menu
     @staticmethod
     def handle_quit_menu_buttons(event, game, quit_button, menu_button):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -22,6 +25,7 @@ class ScreenBase:
                 return True
         return False
 
+    #rysowanie przycisków quit i menu
     def draw_quit_menu_buttons(self, text, small_text, quit_button, menu_button, cursor):
         self.screen.blit(text, ((self.screen.get_width() // 2 - text.get_width() // 2), 220))
         self.screen.blit(small_text, ((self.screen.get_width() // 2 - small_text.get_width() // 2), 265))
@@ -29,9 +33,12 @@ class ScreenBase:
         menu_button.draw(self.screen)
         cursor.draw(self.screen)
 
+
+#klasa MenuScreen, IntroScreen, GameScreen, GameOver i Victory dziedziczą po klasie bazowej
 class MenuScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
+        #pobieranie obrazków i ustawianie czcionek
         self.background = pygame.transform.scale(pygame.image.load("assets/Hangar Background.png"),
                                                  screen.get_size())
         self.ship_image = pygame.image.load("assets/Kestrel/Kestrel Cruiser closed.png").convert_alpha()
@@ -39,12 +46,15 @@ class MenuScreen(ScreenBase):
         self.button = Button(1020, 50, 130, 40, "START", self.font)
         self.cursor = Cursor()
 
+
+    #rysowanie
     def draw(self):
         self.screen.blit(self.background, (0, 0))
         self.screen.blit(self.ship_image, (200, -18))
         self.button.draw(self.screen)
         self.cursor.draw(self.screen)
 
+    #oblusga zdarzeń
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_ESCAPE:
@@ -54,10 +64,11 @@ class MenuScreen(ScreenBase):
         if event.type == pygame.MOUSEBUTTONDOWN and self.button.is_hovered():
             game.state = "intro"
 
-
+#Intro 
 class IntroScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
+        #pobieranie obrazków i ustawianie czcionek
         self.background = pygame.transform.scale(pygame.image.load("assets/Backgrounds/bg_darknebula.png"),
                                                  screen.get_size())
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png",
@@ -65,6 +76,8 @@ class IntroScreen(ScreenBase):
         self.cursor = Cursor()
         self.font = FONTS["medium"]
 
+
+        #fabuła gry
         self.full_text = (
             "Your ship's hyperdrive has failed.\n"
             "You're stranded in hostile space...\n"
@@ -73,10 +86,12 @@ class IntroScreen(ScreenBase):
         )
 
         self.typing_start_time = None
-        self.text_speed = 30  # characters per second
+        self.text_speed = 30  # (zankow na sekunde)
 
         self.jump_button = Button(screen.get_width()//2-37.5, 600, 95, 40, "JUMP", self.font)
 
+
+    #pobieranie tekstu (aniamcja)
     def get_typed_text(self):
         if self.typing_start_time is None:
             return ""
@@ -84,20 +99,22 @@ class IntroScreen(ScreenBase):
         chars_to_show = min(int(elapsed * self.text_speed), len(self.full_text))
         return self.full_text[:chars_to_show]
 
+    #startowanie animacji
     def start(self):
         if self.typing_start_time is None:
             self.typing_start_time = time.time()
 
+    #rysowanie
     def draw(self):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=True)
 
-        # pudełko za tekstem
+        #pudełko za tekstem
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 160))
         self.screen.blit(box_surface, (self.screen.get_width() // 2 - 350, 80))
 
-        # tekst w pudełku
+        #tekst w pudełku
         current_text = self.get_typed_text()
         lines = current_text.split("\n")
         y_offset = 100
@@ -111,6 +128,8 @@ class IntroScreen(ScreenBase):
         self.jump_button.draw(self.screen)
         self.cursor.draw(self.screen)
 
+
+    #obsługa zdarzeń
     def handle_event(self, event, game):
         if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
             game.running = False
@@ -122,7 +141,7 @@ class IntroScreen(ScreenBase):
                 game.game_screen.last_enemy_attack = time.time() # ---LOGIKA ZEBY PRZECIWNIK POCZEKAL Z ATAKIEM
         self.start()
 
-
+#klasa wybuchów
 class Explosion:
     def __init__(self, pos, sprite_path, frame_size=(512, 512), frame_count=64, frame_duration=0.01):
         self.frames = []
@@ -133,9 +152,11 @@ class Explosion:
         self.pos = (pos[0] - frame_size[0] // 2, pos[1] - frame_size[1] // 2)
         self.finished = False
 
+
+    #ładowanie klatek animacji
     def load_frames(self, sprite_path, frame_size, frame_count):
         sheet = pygame.image.load(sprite_path).convert_alpha()
-        sheet_width, sheet_height = sheet.get_size()
+        sheet_width, _ = sheet.get_size()
         frames_per_row = sheet_width // frame_size[0]
         for i in range(frame_count):
             row = i // frames_per_row
@@ -145,6 +166,8 @@ class Explosion:
             frame = sheet.subsurface((x, y, frame_size[0], frame_size[1]))
             self.frames.append(frame)
 
+
+    #aktualizacja animacji
     def update(self, dt):
         if self.finished:
             return
@@ -159,7 +182,7 @@ class Explosion:
         if not self.finished and self.index < len(self.frames):
             surface.blit(self.frames[self.index], self.pos)
 
-
+#glowny ekran samej gry 
 class GameScreen(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
@@ -168,7 +191,7 @@ class GameScreen(ScreenBase):
         self.waiting_for_jump = False
         self.enemy_destroyed_explosion_played = False
 
-        # --Sound Effects--
+        #efekty dzwiekowe
         self.sfx_laser = pygame.mixer.Sound("assets/sound/laser.wav")
         self.sfx_explosion = pygame.mixer.Sound("assets/sound/rocket_explosion.wav")
         self.sfx_player_hit = pygame.mixer.Sound("assets/sound/player_damage.wav")
@@ -176,7 +199,7 @@ class GameScreen(ScreenBase):
         self.sfx_explosion.set_volume(0.3)
         self.sfx_player_hit.set_volume(0.5)
 
-        # --Backgrounds--
+        # tła (randomowo)
         self.background_paths = [
             "assets/Backgrounds/bg_darknebula.png",
             "assets/Backgrounds/bg_blueStarcluster.png",
@@ -186,27 +209,28 @@ class GameScreen(ScreenBase):
             "assets/Backgrounds/low_sun.png",
             "assets/Backgrounds/low_nebula.png",
         ]
+        #tlo dla bosa
         self.boss_background = "assets/Backgrounds/bg_final.png"
         self.background = None
 
-        # --Player Ship--
+        #statek gracza
         self.ship = Ship("assets/Kestrel/Kestrel Cruiser closed.png", screen.get_width()//2, screen.get_height()//2)
         self.ship.move(-300, 35)
         self.player_destroyed_explosion_played = False
 
-        # --Engine Animation--
+        #silniki statku
         self.engine_image = pygame.image.load("assets/Kestrel/Kestrel Engine.png").convert_alpha()
 
-        # --Paski HP/Shield--
+        #paski gracaza
         self.health_bar = Bar(x=40, y=60, width=200, height=24, max_value=100, fill_color=(200, 200, 200), label="HULL")
         self.shield_bar = Bar(x=40, y=110, width=200, height=20, max_value=50, fill_color=(0, 0, 255), label="SHIELDS")
 
-        # --Guziki--
+        #guziki
         self.jump_button = Button(screen.get_width() // 2 - 47.5, 50, 95, 40, "JUMP", FONTS["medium"])
         self.laser_button = Button(screen.get_width() // 2 - 59, 600, 118, 40, "LASER", FONTS["medium"])
         self.rocket_button = Button(screen.get_width() // 2 - 59, 650, 118, 40, "ROCKET", FONTS["medium"])
 
-        # --Bronie--
+        #bronie
         self.laser_ready_img = pygame.image.load("assets/Kestrel/Laser ready.png").convert_alpha()
         self.laser_unready_img = pygame.image.load("assets/Kestrel/Laser unready.png").convert_alpha()
         self.rocket_ready_img = pygame.image.load("assets/Kestrel/Rocket ready.png").convert_alpha()
@@ -219,7 +243,7 @@ class GameScreen(ScreenBase):
         self.last_player_rocket_attack = 0     # czas ostatniego ataku rakietą
         self.last_enemy_attack = 0
 
-        # --Przeciwnicy--
+        #przeciwnicy
         self.enemy_ship_paths = [
             "assets/AutoScout/Auto-Scout.png",
             "assets/Mantis/Mantis Fighter.png",
@@ -227,6 +251,7 @@ class GameScreen(ScreenBase):
             "assets/Lanius/Lanius.png",
             "assets/EFighter/Energy Fighter.png"
         ]
+        #randomowo wbiera przeciwników
         random.shuffle(self.enemy_ship_paths)
         self.boss_ship_path = "assets/RFlagship/Flagship closed.png"
         self.enemy_variants = None
@@ -235,18 +260,21 @@ class GameScreen(ScreenBase):
         self.enemy_shield_bar = None
         self.spawn_enemy()
 
-        # --Pociski i wybuchy--
+        #pociski i wybuchy
         self.laser_projectiles = []
         self.enemy_projectiles = []
         self.rocket_projectiles = []
         self.explosions = []
 
+
+    #sprawdzenie czy bronie są gotowe do użycia
     def is_laser_ready(self):
         return time.time() - self.last_player_laser_attack >= self.laser_attack_cooldown
 
     def is_rocket_ready(self):
         return time.time() - self.last_player_rocket_attack >= self.rocket_attack_cooldown
 
+    #rysownaie
     def draw(self, game):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=self.waiting_for_jump)
@@ -266,13 +294,15 @@ class GameScreen(ScreenBase):
         self.draw_explosions()
         self.cleanup_after_explosions(game)
         self.cursor.draw(self.screen)
-
+    
     def draw_stage_label(self):
-        # STAGE 1,2,3,etc.
+        #wyswietlanie stage (1,2,3 itd)
         font = FONTS["large"]
         stage_text = font.render(f"STAGE {self.stage}", True, (255, 255, 0))
         self.screen.blit(stage_text, (self.screen.get_width() // 2 - stage_text.get_width() // 2, 10))
 
+
+    #rysowanie broni
     def draw_weapons(self):
         if self.waiting_for_jump:
             return
@@ -281,9 +311,11 @@ class GameScreen(ScreenBase):
         self.screen.blit(self.laser_ready_img if self.is_laser_ready() else self.laser_unready_img, laser_pos)
         self.screen.blit(self.rocket_ready_img if self.is_rocket_ready() else self.rocket_unready_img, rocket_pos)
 
+    #rysowanie animacji silników
     def draw_engine_animation(self):
         if self.waiting_for_jump or self.enemy.health <= 0:
             return
+        #ALGORTYM ANIMACJI
         # alpha silnikow w zależności od czasu
         # 100 to minimalna przezroczystosc, 255 to maksymalna
         # 135 to amplituda, 0.5 to przesuniecie fazowe
@@ -295,6 +327,8 @@ class GameScreen(ScreenBase):
         for pos in positions:
             self.screen.blit(image, pos)
 
+
+    #rysowanie przeciwnika
     def draw_enemy(self):
         if self.enemy.health > 0:
             self.enemy.draw(self.screen)
@@ -306,6 +340,8 @@ class GameScreen(ScreenBase):
             variant_text = FONTS["small"].render(f"{variant_key.upper()} ENEMY", True, (255, 255, 255))
             self.screen.blit(variant_text, (self.screen.get_width() // 2 - variant_text.get_width() // 2, 50))
 
+
+    #atak przeciwnika
     def enemy_attack(self):
         if not self.waiting_for_jump and self.enemy.health > 0 and self.ship.health > 0:
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
@@ -320,7 +356,8 @@ class GameScreen(ScreenBase):
                     damage=damage
                 )
                 self.enemy_projectiles.append(projectile)
-
+    
+    #rysowanie przycisku skoku lub broni
     def draw_jump_button_or_weapons(self):
         if self.waiting_for_jump:
             self.jump_button.draw(self.screen)
@@ -328,6 +365,8 @@ class GameScreen(ScreenBase):
             self.laser_button.draw(self.screen, color=(0, 200, 0) if self.is_laser_ready() else (200, 0, 0))
             self.rocket_button.draw(self.screen, color=(0, 200, 0) if self.is_rocket_ready() else (200, 0, 0))
 
+
+    #spawnowanie wybuchu po zniszczeniu statku gracza lub przeciwnika
     def spawn_enemy_explosion(self):
         if self.enemy.health <= 0 and not self.enemy_destroyed_explosion_played:
             self.explosions.append(
@@ -339,7 +378,7 @@ class GameScreen(ScreenBase):
                 )
             )
             self.enemy_destroyed_explosion_played = True
-
+    #czyszcenie 
     def cleanup_after_explosions(self, game):
         if self.ship.health <= 0 and self.player_destroyed_explosion_played and not self.explosions:
             game.state = "death"
@@ -352,6 +391,8 @@ class GameScreen(ScreenBase):
             self.sfx_laser.stop()
             self.sfx_player_hit.stop()
 
+
+    #rysowanie pocisków
     def draw_projectiles(self):
         for projectile in self.enemy_projectiles:
             projectile.update()
@@ -374,14 +415,14 @@ class GameScreen(ScreenBase):
             self.player_destroyed_explosion_played = True
 
         self.enemy_projectiles = [p for p in self.enemy_projectiles if p.active]
-
+    #rysowanie wybuchów
     def draw_explosions(self):
         dt = 1 / 60
         for explosion in self.explosions:
             explosion.update(dt)
             explosion.draw(self.screen)
         self.explosions = [e for e in self.explosions if not e.finished]
-
+    #spawnowanie przeciwnika
     def spawn_enemy(self):
         #zmiana tła
         if self.stage < 5:
@@ -462,12 +503,12 @@ class GameScreen(ScreenBase):
                     game.state = "victory"
 
     def update_projectile_collisions(self, game):
-        # \/ Pomocnicza funkcja do kolizji
+        #\/ pomocnicza funkcja do kolizji
         def process_projectile(proj_list, is_rocket):
             for projectile in proj_list:
                 projectile.update() # Przesunięcie pocisku
 
-                #Inicjalizacja danych kolizji, jeśli nie isntieją
+                #inicjalizacja danych kolizji, jeśli nie isntieją
                 if not hasattr(projectile, "collision_detected"):
                     projectile.collision_detected = False
                     projectile.collision_point = None
@@ -511,6 +552,8 @@ class GameScreen(ScreenBase):
         self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
 
+
+#klasa po przegranej
 class GameOver(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
@@ -532,6 +575,7 @@ class GameOver(ScreenBase):
         if self.handle_quit_menu_buttons(event, game, self.quit_button, self.menu_button):
             return
 
+#kalsa wygranej
 class Victory(ScreenBase):
     def __init__(self, screen):
         super().__init__(screen)
