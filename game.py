@@ -58,13 +58,13 @@ class Game:
                         pygame.mixer.music.play(-1)
                         self.current_music = "game"
 
-                # case "death":
-                #     if self.current_music != "death":
-                #         pygame.mixer.music.load("assets/sound/gameover_theme.wav")
-                #         pygame.mixer.music.set_volume(0.5)
-                #         pygame.mixer.music.play(-1)
-                #         self.current_music = "death"
-                #
+                case "death":
+                    if self.current_music != "death":
+                        pygame.mixer.music.load("assets/sound/death theme.mp3")
+                        pygame.mixer.music.set_volume(0.3)
+                        pygame.mixer.music.play(-1)
+                        self.current_music = "death"
+
                 case "victory":
                     if self.current_music != "victory":
                         pygame.mixer.music.load("assets/sound/victory theme.mp3")
