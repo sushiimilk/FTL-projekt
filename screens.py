@@ -10,10 +10,6 @@ class ScreenBase:
         self.screen = screen
 
     @staticmethod
-    # handle_quit_menu_buttons in ScreenBase is a @staticmethod because it
-    # does not use or modify any instance (self) or class (cls) attributes.
-    # It only processes the event and buttons passed as arguments.
-    # Making it static clarifies that it does not depend on the state of a ScreenBase object.
     def handle_quit_menu_buttons(event, game, quit_button, menu_button):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if quit_button.is_hovered():
@@ -96,12 +92,12 @@ class IntroScreen(ScreenBase):
         self.screen.blit(self.background, (0, 0))
         self.ship.draw(self.screen, centered=True)
 
-        #box behind the intro text
+        # pudełko za tekstem
         box_surface = pygame.Surface((700, 200), pygame.SRCALPHA)
         box_surface.fill((0, 0, 0, 160))
         self.screen.blit(box_surface, (self.screen.get_width() // 2 - 350, 80))
 
-        # intro text
+        # tekst w pudełku
         current_text = self.get_typed_text()
         lines = current_text.split("\n")
         y_offset = 100
@@ -315,12 +311,11 @@ class GameScreen(ScreenBase):
             if time.time() - self.last_enemy_attack >= self.enemy.attack_cooldown:
                 self.last_enemy_attack = time.time()
                 damage_range = self.enemy.variant["damage"]
-                damage = random.randint(*damage_range)
+                damage = random.randint(*damage_range) # * przy damage rozpakowuje krotke do użycia
                 projectile = LaserProjectile(
                     x=self.enemy.rect.left+30,
                     y=self.enemy.rect.centery,
                     dx=-1,
-                    dy=0,
                     image_path="assets/Projectiles/enemy laser.png",
                     damage=damage
                 )
@@ -447,13 +442,13 @@ class GameScreen(ScreenBase):
                 self.sfx_laser.play()
                 self.last_player_laser_attack = time.time()
                 self.laser_projectiles.append(
-                    LaserProjectile(420, 333, 1, 0, "assets/Projectiles/laser projectile.png", random.randint(20, 26))
+                    LaserProjectile(420, 333, 1, "assets/Projectiles/laser projectile.png", random.randint(20, 26))
                 )
 
             if self.rocket_button.is_hovered() and self.is_rocket_ready():
                 self.last_player_rocket_attack = time.time()
                 self.rocket_projectiles.append(
-                    RocketProjectile(430, 443, 1, 0, "assets/Projectiles/missile.png", random.randint(26, 39))
+                    RocketProjectile(430, 443, 1, "assets/Projectiles/missile.png", random.randint(26, 39))
                 )
 
             if self.jump_button.is_hovered() and self.waiting_for_jump:
@@ -467,29 +462,35 @@ class GameScreen(ScreenBase):
                     game.state = "victory"
 
     def update_projectile_collisions(self, game):
+        # \/ Pomocnicza funkcja do kolizji
         def process_projectile(proj_list, is_rocket):
             for projectile in proj_list:
-                projectile.update()
+                projectile.update() # Przesunięcie pocisku
+
+                #Inicjalizacja danych kolizji, jeśli nie isntieją
                 if not hasattr(projectile, "collision_detected"):
                     projectile.collision_detected = False
                     projectile.collision_point = None
                     projectile.required_depth = None
+
                 if self.enemy.health > 0:
                     if not projectile.collision_detected:
-                        if projectile.rect.colliderect(self.enemy.rect):
+                        if projectile.rect.colliderect(self.enemy.rect): #Sprawdzenie pierwszej kolizji
                             projectile.collision_detected = True
                             projectile.collision_point = projectile.rect.center
                             enemy_width = self.enemy.rect.width
                             projectile.required_depth = int(enemy_width * 0.2) + random.randint(-10, 100)
+                            # /\ Wymagana "głębokość" dla animacji wybuchu
                     else:
-                        dx = projectile.rect.centerx - projectile.collision_point[0]
-                        dy = projectile.rect.centery - projectile.collision_point[1]
-                        distance = (dx ** 2 + dy ** 2) ** 0.5
-                        if projectile.required_depth and distance >= projectile.required_depth:
+                        # \/ Obliczanie ilość pixeli od punktu kolizji
+                        x = projectile.rect.centerx - projectile.collision_point[0]
+                        # \/ Jeśli wystarczająca głebokość, zadaj obrażenia
+                        if projectile.required_depth and x >= projectile.required_depth:
                             self.enemy.take_damage(projectile.damage)
                             game.total_damage_dealt += projectile.damage
                             self.sfx_explosion.play()
                             projectile.active = False
+
                             explosion_img = "assets/explosions/explosion 2h.png" if is_rocket else "assets/explosions/explosion 1h.png"
                             offset_x = 90 if is_rocket else 0
                             self.explosions.append(
@@ -502,9 +503,11 @@ class GameScreen(ScreenBase):
                             )
                 projectile.draw(self.screen)
 
+        #Obsługa obu pocisków przez klasę pomocniczą
         process_projectile(self.laser_projectiles, is_rocket=False)
         process_projectile(self.rocket_projectiles, is_rocket=True)
 
+        #Usuwanie nieaktywnych pocisków
         self.laser_projectiles = [p for p in self.laser_projectiles if p.active]
         self.rocket_projectiles = [p for p in self.rocket_projectiles if p.active]
 
