@@ -4,7 +4,7 @@ class Projectile:
     def __init__(self, x, y, dx, image_path, damage, speed):
         self.image = pygame.image.load(image_path).convert_alpha()
         self.rect = self.image.get_rect(center=(x, y))
-        # Normalize direction and multiply by speed
+        # Normalizacja dx i skalowanie do prędkości
         length = (dx ** 2) ** 0.5
         if length != 0:
             self.dx = dx / length * speed
@@ -15,7 +15,7 @@ class Projectile:
 
     def update(self):
         self.rect.x += self.dx
-        # Usuń jak poza ekranem
+        #usuń jak poza ekranem
         if self.rect.right < 0 or self.rect.left > 1200:
             self.active = False
 
