@@ -47,7 +47,7 @@ class Game:
                 case "menu":
                     if self.current_music != "menu":
                         pygame.mixer.music.load("assets/sound/menu theme.mp3")
-                        pygame.mixer.music.set_volume(0.4)
+                        pygame.mixer.music.set_volume(0.35)
                         pygame.mixer.music.play(-1)
                         self.current_music = "menu"
 
@@ -65,12 +65,12 @@ class Game:
                 #         pygame.mixer.music.play(-1)
                 #         self.current_music = "death"
                 #
-                # case "victory":
-                #     if self.current_music != "victory":
-                #         pygame.mixer.music.load("assets/sound/victory_theme.wav")
-                #         pygame.mixer.music.set_volume(0.5)
-                #         pygame.mixer.music.play(-1)
-                #         self.current_music = "victory"
+                case "victory":
+                    if self.current_music != "victory":
+                        pygame.mixer.music.load("assets/sound/victory theme.mp3")
+                        pygame.mixer.music.set_volume(0.4)
+                        pygame.mixer.music.play(-1)
+                        self.current_music = "victory"
 
             # ✅ DRAWING SCREENS
             match self.state:

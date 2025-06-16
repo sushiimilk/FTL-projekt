@@ -405,9 +405,9 @@ class GameScreen(ScreenBase):
         self.enemy_variants = {
             "fast": {"hp": 80, "shield": 30, "damage": (8, 15), "cooldown": 1},
             "standard": {"hp": 100, "shield": 50, "damage": (10, 15), "cooldown": 2.0},
-            "heavy": {"hp": 175, "shield": 75, "damage": (17, 24), "cooldown": 2.7},
+            "heavy": {"hp": 175, "shield": 60, "damage": (17, 24), "cooldown": 2.6},
             "shielded": {"hp": 90, "shield": 125, "damage": (10, 15), "cooldown": 2.0},
-            "superheavy": {"hp": 250, "shield": 150, "damage": (17, 30), "cooldown": 3.5}
+            "superheavy": {"hp": 200, "shield": 150, "damage": (17, 30), "cooldown": 3.5}
         }
 
         #Losowanie przeciwnika
