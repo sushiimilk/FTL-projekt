@@ -31,14 +31,7 @@ Wspólnie
 - Bronie na statku
 - Animacje i logika pocisków
 
-
-
 Do zrobienia
-- remove player attack logic replace with projectile damage
-- poprawic strzelania i usuwanie pociskow
-- strzelanie od przeciwnikow
-- atak przeciwnika spod srodka
-
 czytelny podział na moduły lub pakiety,
 • bardziej zaawansowane animacje i efekty graficzne,
 • interaktywne i atrakcyjne menu startowe oraz menu końcowe (np. podsumowanie wyników gry),
